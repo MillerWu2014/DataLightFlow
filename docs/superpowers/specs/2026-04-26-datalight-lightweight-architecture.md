@@ -1,9 +1,11 @@
 # DataLight 轻量化技术方案（新仓库 + 分模块，完全重构）
 
-**版本**：1.0  
+**版本**：1.1  
 **日期**：2026-04-26  
 **状态**：设计稿（待评审后进入实现计划）  
 **与上游关系**：不延续 monolithic `open-dataflow` 包结构；**方案 C — 新独立仓库**承载全部代码，仅将原 DataFlow 作行为与算子**参考**（不强制 fork 保历史）。
+
+**1.1 变更摘要（相对 1.0）**：**摄取层文档解析仅采用本地 MinerU**；**禁止** MinerU **商业/云端 API** 路径；删除「pypdf 等回退与 API 三选一」表述；**§4** 扩写为可落地的实现规格（CLI、目录布局、配置与错误处理）。
 
 **本轮明确排除**：**Word（.doc/.docx）** 作为语料或转换输入；若未来需要，以单独 ADR 扩展摄取层，不阻塞当前架构。
 
@@ -17,10 +19,10 @@
 
 ### 1.2 成功标准（可验证）
 
-- **摄取层**：对 **HTTP(S) URL** 与 **目录下 PDF** 产出 **Markdown**；**目录输入时输出目录与相对结构一致**（见 §3.2）。  
+- **摄取层**：在 **仅使用本地 MinerU** 作版面/文档→Markdown 解析（见 **§4**）的前提下，对 **可解析输入** 产出 **Markdown**；**目录输入时输出目录与相对结构一致**（见 §3.2）。  
 - **数据层**：仅消费 **已生成的 `.md` 树** 或等价的清单索引；各阶段 **可独立运行、可复现**（记录模型名、提示词版本、配置哈希）。  
-- **工程**：核心依赖清晰；`pip install` 分 **minimal / llm / mineru** 等 **extras**；**无** 对 WebUI、Ray、全量 `dataflow` 的硬依赖。  
-- **可测试**：摄取与流水线核心逻辑可在 **无 GPU、可选无网络（fixture）** 下跑通单元测试。
+- **工程**：核心依赖清晰；`pip install` 分 **minimal / llm / ingest-mineru-local** 等 **extras**；**无** 对 WebUI、Ray、全量 `dataflow` 的硬依赖。  
+- **可测试**：摄取与流水线核心逻辑可分层测试；**MinerU 路径** 以 **进程级/录制日志** 或 **集成环境（安装 mineru 的小 CI job）** 为主（见 §8）。
 
 ---
 
@@ -28,129 +30,179 @@
 
 | 包含 | 不包含（本设计稿） |
 |------|-------------------|
-| URL → Markdown（以 HTML/文本提取为主，见 §4） | Word、PPT、扫描件专用 OCR 管线（可后续加模块） |
-| 目录中 PDF → Markdown | 原库全部算子、Agent、ECO、RayOrch |
-| 基于 MD 的生成 / 精炼 / 评估 / 过滤 | 与上游仓库的 import 或 git 子模块耦合 |
-| 统一清单（manifest）与错误策略 | 生产级多租户、权限与计费 |
+| **本地 MinerU** 将 **PDF 与 MinerU 本地支持的图片**（如 `.png/.jpg/.jpeg/.webp/.gif` 等，以 **MinerU 官方 CLI 能力** 为准）转为 Markdown；**直链 PDF 的 URL** 下载后走同一套本地 MinerU | **MinerU 云/商业 API**、**FlashMinerU / Ray 分布式** 等非「单机本地 `mineru` 进程」路径 |
+| **HTML 为首页的普通网页 URL** 的**正文提取** | **首版不纳入**（其不是 MinerU 输入；若未来需要，单独 ADR，可用 trafilatura 等，与「MinerU 文档解析层」**解耦**） |
+| 目录中 **PDF/图片** → Markdown | Word、PPT、专用 OCR 管线（可后续加模块） |
+| 基于 MD 的生成 / 精炼 / 评估 / 过滤 | 原库全部算子、Agent、ECO、RayOrch |
+| 统一清单（manifest）与错误策略 | 与上游仓库的 import 或 git 子模块耦合；生产级多租户、权限与计费 |
 
 ---
 
 ## 3. 系统分解（分模块）
 
-建议新仓库包名（示例，可替换）：`datalight`；顶层分三个 **可安装子包或命名空间**。
+建议新仓库包名（示例，可替换）：`datalight`；顶层分 **可安装子包或命名空间**。
 
 ```
 datalight/
-  ingest/        # 仅「源 → Markdown + manifest」
+  contracts/    # 共享：manifest schema、jsonl 记录 schema、错误码
+  ingest/       # 仅「源 → Markdown + manifest」；核心为 miners.local 适配器
   pipeline/     # 仅「Markdown/清单 → JSONL 各阶段」
-  contracts/   # 共享：manifest schema、jsonl 记录 schema、错误码
   cli/          # 单入口，薄封装
 ```
 
 ### 3.1 模块 `datalight.contracts`
 
-- **职责**：**唯一** 的跨模块类型与 **JSON Schema**（或 Pydantic 模型）定义，避免 `ingest` 与 `pipeline` 各写各的。  
-- **交付物**：`IngestManifest`、`PipelineRunManifest`、`Record`（单条训练/RAG 样本 + metadata）的稳定字段集。
+- **职责**：**唯一** 的跨模块类型与 **JSON Schema**（或 Pydantic 模型）定义。  
+- **交付物**：`IngestManifest`、`PipelineRunManifest`、`Record` 的稳定字段集。  
+- **摄取元数据**：`parser` 固定为 `mineru_local`；**附加** `mineru_version`（`mineru --version` 或 importlib 可读）、`mineru_backend`（如 `vlm-auto-engine`）、`cli_invocation_id`（可选，便于对日志）。
 
 ### 3.2 模块 `datalight.ingest`
 
-**输入（二选一，互斥语义写死）：**
+**输入：**
 
-- **模式 A — 目录**：`ingest <input_dir> <output_dir>`。递归扫描，仅处理 **`.pdf`**；对每个 PDF 在 `output_dir` 下写 **与 `input_dir` 相对路径一致** 的 `*.md`（与源文件**同词干**，扩展名由 `.pdf` 变为 `.md`）。  
-- **模式 B — URL**：`ingest --url <url> <output_dir>`。在 `output_dir` 下写 **约定子树**，例如 `urls/<slug_or_hash>/source.md`（**无法**与模式 A 的「镜像目录」用同一套路径规则，必须在 CLI 与文档中说明；manifest 中标注 `source_kind: "url"`）。
+- **模式 A — 目录**：`ingest <input_dir> <output_dir>`。递归扫描，对扩展名属于 **白名单** 的文件处理（**至少** `.pdf` 与 **MinerU CLI 所支持的图片扩展**；白名单在实现中与 MinerU 发行版**对齐并写进 README**）。对每个匹配文件在 `output_dir` 下写 **与 `input_dir` 相对路径一致** 的 `*.md`（**与源文件同主文件名**，扩展名改为 `.md`）。  
+- **模式 B — URL**：`ingest --url <url> <output_dir>`。**首版只保证**：  
+  - **Content-Type 为 `application/pdf`（经 HEAD/GET 判断）** 时：下载为临时/缓存文件后，走 **与模式 A 相同** 的 **本地 MinerU** 单文件解析，再在 `output_dir` 的约定子树中落盘（如 `urls/<slug_or_hash>/source.md`），`source_kind: "url"`。  
+  - **纯 HTML 响应**：**不解析**，manifest 记 `failed` + 错误码 `E_URL_HTML_NOT_SUPPORTED`（或 `skipped` + 原因），除非后续 ADR 增加「非 MinerU 的 HTML 旁路」。
 
-**不处理**：本阶段 **不** 解析 Word；若目录中出现 `.docx` 可 **记录 skip** 并写入 manifest，不失败整批（可配置为 strict）。
+**不处理**：Word；若目录出现 `.docx` 可 **记录 skip**（可配置 strict）。
 
-**输出**：  
-- **Markdown 文件树**（符合上述规则）。  
-- **`ingest_manifest.json`**（或 JSONL 一行一条文件）：`source_path`、`output_md_path`、`status`（ok / skipped / failed）、`error_code`、`sha256`（对源文件或拉取体）、`backend`（见 §4）。
+**输出**：**Markdown 文件树** + **`ingest_manifest.json`（或 JSONL）**：`source_path`、`output_md_path`、`status`、`error_code`、`sha256`（对源/下载体）、`parser: "mineru_local"`、以及 §4.4 的 **结构化解码字段**。
 
-**依赖控制**：`trafilatura`（URL/HTML）与 **可插拔的 PDF 后端**（见 §4）分别放入 extras。
+**依赖控制**：**摄取核心** 的「文档→MD」**仅** 依赖 **本机可执行的 `mineru` CLI**（由 `mineru` PyPI/发行说明安装）；**不** 将 **trafilatura** 列入 ingest 的**默认/硬依赖**（与 HTML 未纳入 v1.1 一致）。
 
 ### 3.3 模块 `datalight.pipeline`
 
-- **输入**：`ingest` 产出的根目录 + `ingest_manifest.json`（**推荐** 总是带清单，避免扫盘歧义）。  
-- **四阶段**（**顺序**固定；每阶段读写独立子目录，便于删除重跑）：  
-  1. **generate**：`md/` → `generated/`（如 chunk + 问题生成，JSONL）  
-  2. **refine**：`generated/` → `refined/`  
-  3. **eval**：`refined/` → `scored/`（每样本有分数/理由）  
-  4. **filter**：`scored/` → `export/`（阈值与规则，**最终** SFT / RAG 用 JSONL）  
-- **实现约束**：每阶段 = **一个明确 CLI 子命令** + 共享「读上阶段、写下阶段」的 I/O 助手；**不** 引入原仓库的全局 `OPERATOR_REGISTRY` 除非有充分理由；若保留「算子」概念，则 **新 registry 仅服务本包**。
+（同 1.0）**输入**：`ingest` 根目录 + `ingest_manifest.json`。**四阶段**：generate → refine → eval → **filter** → `export/`。
 
 ### 3.4 模块 `datalight.cli`
 
-- 单入口，例如 `datalight ingest ...`、`datalight pipeline run --stage all|generate|...`。  
-- 配置：优先 **YAML/ TOML 文件** + 环境变量（API key），**不** 依赖原 WebUI。
+- 单入口，`datalight ingest` **必须** 暴露与本地 MinerU 相关的 **显式配置**（见 §4.3），例如：  
+  `mineru-backend`、`mineru-source=local`（写死为 local，不提供 cloud）、`intermediate-base`、`timeout-seconds` 等。  
+- **禁止**：从 CLI/环境变量读取 **MinerU 云 API Key** 作为**默认解析路径**（首版**不提供**该代码路径；若出现遗留参数，**拒绝启动** 或**明确报 deprecated**）。
 
 ---
 
-## 4. 摄取技术选型（无 Word）
+## 4. 摄取层：仅本地 MinerU（实现规格）
 
-### 4.1 URL
+本节为 **v1.1 硬性约定**：**所有 PDF/图片/直链 PDF 的版面解析，仅通过本机 `mineru` 子进程完成**；**不使用** [MinerU Net API](https://mineru.net/) 等 **商业/托管 API**；**不实现** 基于 HTTP 的 `MinerUBatchExtractorViaAPI` 等同类逻辑。
 
-- 默认：若响应为 `text/html`，**trafilatura** `fetch_url` + `extract(..., output_format="markdown")`。  
-- 若响应为 `application/pdf`：下载至临时或目标目录，再走 **与本地 PDF 相同** 的 PDF 后端。  
-- 网络错误、非 HTML 非 PDF：写入 manifest `failed` + 错误码，不阻断（除非 `--fail-fast`）。
+### 4.1 总原则
 
-### 4.2 PDF
+1. **单一后端**：`datalight.ingest.backends.mineru_local`（类名可调整）是 **唯一** 的「版式文档 → Markdown」实现；**不** 提供 pypdf / pdfplumber 等**替代解析链**作为回退。  
+2. **可观测**：每次子进程**必须** 捕获 **stdout/stderr**（可配置截断长度），失败时写入 manifest 的 `error_detail`（脱敏后）。  
+3. **可复现**：manifest 中记录 `mineru` **版本**、**`-b` backend**、**`--source local`**、以及**输出目录的规范化路径**（见 4.2）。
 
-- **主路径**：**MinerU** 作为 **可选 extra**（API、本地 CLI 或受支持的后端三选一在配置中指定）—— 行为对齐原 `mineru_operators` 思想，**实现为新仓库内独立适配器类**，不复制原 `DataFlowStorage` 依赖。  
-- **可选回退**（可后续迭代）：**仅** 在文档中写明的轻量回退（如纯文本 `pypdf`）用于无 GPU/无 MinerU 环境；**默认质量策略以 MinerU 为准。**
+### 4.2 子进程调用契约（与 DataFlow 参考实现对齐）
 
-本设计 **不** 在首版强制图片类 PDF 的完美公式还原；以「结构良好的 Markdown + manifest」为交付。
+实现应 **参考**（非复制 `DataFrame` 逻辑）`FileOrURLToMarkdownConverterLocal._batch_parse_pdf_with_mineru` 的调用形态，并 **固定** 以下契约：
+
+- **可执行体**：`mineru` 必须在 `PATH` 中，或通过配置项 `MINERU_EXECUTABLE` 指定。启动前执行**存在性检查**，缺失则 **FATAL**（错误码 `E_MINERU_NOT_FOUND`），并打印安装指引（链向 MinerU 官方文档）。  
+- **每文件**（或受控的**小批**，若后续优化）一次调用，**推荐** 参数形态：
+
+  ```text
+  mineru -p <absolute_source_path> -o <intermediate_dir> -b <backend> --source local
+  ```
+
+  其中：  
+  - **`-p`**：单文件，本地路径，**PDF 或 MinerU 支持的图片**。  
+  - **`-o`**：`intermediate_dir`：**本次 ingest 可配置的中间根**（如 `<output_dir>/.datalight/mineru_work` 或用户指定），**必须** 对并发/多次运行**安全**（每文件可再分子目录避免冲突，见 4.5）。  
+  - **`-b`**：backend 字符串，**默认** 与 MinerU 当前发行版推荐一致（如 `vlm-auto-engine` 等，**以配置为准**，文档中列出**受支持枚举**）。  
+  - **`--source local`**：写死，表明 **仅本地** 资源与模型路径模式。
+
+- **成功输出路径（解码规则）**：在参考实现中，Markdown 主文件路径形态为：  
+
+  `os.path.join(intermediate_dir, <stem>, <backend_value>, f"{<stem>}.md")`  
+
+  即：**第一级子目录 = 无扩展名的文件名**；**第二级 = backend 名**；**其下为同主名 `.md`**。  
+  **DataLight 实现** 应用 **相同解码规则** 从 `intermediate_dir` 定位产出的 `*.md`，再 **复制或移动** 到**用户可见**的**镜像输出路径**（与 §3.2 的 `output_dir` 相对结构一致）。若 MinerU 小版本**变更了目录树**，**适配器** 应 **单点** 更新（`resolve_mineru_markdown_path(intermediate, stem, backend) -> Path`）。
+
+- **失败判定**：`subprocess` **returncode != 0** 视为该文件 **failed**；**returncode == 0** 但 **未找到** 期望的 `.md` 视为 **failed**（`E_MINERU_OUTPUT_MISSING`），并将 stderr 摘要写入 manifest。
+
+- **超时**：每文件**必须** 可配置超时（如默认 1h 或按页数估计，**具体数值在实现时写入模块常量并允许 CLI 覆盖**），超时**终止**子进程，记 `E_MINERU_TIMEOUT`。
+
+### 4.3 模型与运行环境
+
+- **模型来源**：**仅** [MinerU 官方「本地 / `--source local`」文档](https://opendatalab.github.io/MinerU/) 所述方式（如 `mineru-models-download`、本地 cache 目录）。  
+- **配置项**（在 ingest 侧暴露，**与 DataFlow 中 `mineru_model_path`、`mineru_backend`、`mineru_download_model_type` 等概念对齐** 但**独立配置命名空间**）：  
+  - `model_path` / `model_cache`：与 MinerU 环境变量或 CLI 约定**一致**（实现时列一张表，避免两套魔法字符串）。  
+  - **GPU**：不强制在 ingest 内管理 CUDA 可见性；**文档** 说明需与 MinerU 后端要求一致（VLM 后端常需 **GPU/显存**）。**无 GPU 机器** 上的行为以 MinerU 官方能力为准，DataLight **如实** 记录失败原因。
+
+### 4.4 Manifest 中建议增加的 MinerU 专用字段
+
+除通用字段外，**每条成功记录** 建议含：
+
+- `mineru_version`  
+- `mineru_backend`  
+- `intermediate_relpath`（相对 work root，便于排障；可选）  
+- `duration_ms`（子进程墙钟时间）
+
+**失败记录** 建议含：截断的 `stderr_tail`、`returncode`（若有）。
+
+### 4.5 并发与中间文件
+
+- **默认串行** 每文件一个 `mineru` 进程，避免 GPU 显存打满；**可选** `MAX_PARALLEL`（>1 时**文档** 警告显存与 MinerU 行为）。  
+- **清理策略**：`--keep-intermediate` 保留中间树；否则在成功落盘**用户 md** 后**可删除**该文件对应 `intermediate` 子树（**失败时保留** 便于查 log）。
+
+### 4.6 URL 下载（仍仅服务 MinerU）
+
+- **HEAD/GET** 检测 `Content-Type`；**仅**当判定为 **PDF** 时 **GET** 保存到**唯一临时路径** 或 `cache` 后调用 **4.2** 的同一适配器。  
+- **不** 对 HTML 做正文提取；见 §2 / §3.2 错误码。
 
 ---
 
 ## 5. 数据流与可复现性
 
-- **ingest** 的 manifest 与 **pipeline** 的每阶段运行日志（`run_manifest.json`）应包含：工具版本、配置哈希、时间戳。  
-- **filter** 输出的每条记录至少含：`source_md`、各阶段模型名、**prompt 模板版本 id**、分数、是否进入 export。
+- **ingest** 的 manifest 与 **pipeline** 的 `run_manifest.json` 应包含：工具版本、**MinerU 版本与 backend**、配置哈希、时间戳。  
+- **filter** 输出字段（同 1.0）。
 
 ---
 
 ## 6. 错误与退出约定
 
-- **批处理默认**：单文件失败不导致进程码非 0 除非 `--fail-fast`；汇总在 manifest 中。  
-- **CI 建议**：`--fail-fast` 用于小数据集回归。
+- **批处理默认** / **`--fail-fast`**（同 1.0）。  
+- **建议错误码表**（实现时落在 `contracts`）：`E_MINERU_NOT_FOUND`、`E_MINERU_FAILED`、`E_MINERU_OUTPUT_MISSING`、`E_MINERU_TIMEOUT`、`E_URL_HTML_NOT_SUPPORTED`、**Word skip** 等。
 
 ---
 
 ## 7. 与 DataFlow 的关系（方案 C）
 
 - **代码**：**新仓库**；不保留原 `dataflow` 包名作为主入口。  
-- **知识迁移**：**人工** 从 `dataflow/operators/knowledge_cleaning/generate/mineru_operators.py` 等文件 **借鉴** URL/PDF/MinerU 调用与边界条件；**不** 通过 `git subtree` 拉取整条历史，除非项目维护者另有决定。  
-- **许可证**：新仓库**沿用** Apache-2.0 或与上游及依赖（MinerU 等）兼容的协议；在 `NOTICE` 中致谢 OpenDCAI/DataFlow。
+- **知识迁移**：**人工** 从 `dataflow/operators/knowledge_cleaning/generate/mineru_operators.py` 的 **`FileOrURLToMarkdownConverterLocal`** 分支 **只借鉴本地子进程 + 输出路径解码**；**不** 迁移 `FileOrURLToMarkdownConverterAPI`、**不** 迁移依赖 `DataFlowStorage` 的 `run` 方法。  
+- **许可证**（同 1.0）。
 
 ---
 
 ## 8. 测试策略
 
-- **ingest**：fixture 小 PDF、录制的 `responses` HTML、mock MinerU API（或 CLI dry-run 接口若存在）。  
-- **pipeline**：每阶段用 **固定** 小 JSONL 输入/黄金输出；LLM 调用 **mock** 或 vcr。  
-- **合同**：`contracts` 的 schema **契约测试**（反序列化、必填字段）。
+- **ingest + MinerU**：**单元** 用 **子进程 mock**（注入假 `mineru` 可执行，验证参数与路径解码）；**集成** 在具备 **真实 `mineru` + 小 PDF** 的环境跑 **一条 golden**：产出 `.md` 与 `manifest` 关键字段。  
+- **不** 以「Mock 商业 API」作为摄取主测试（该路径**已删除**）。  
+- **pipeline**（同 1.0）。  
+- **contracts**：反序列化与必填字段。
 
 ---
 
-## 9. 风险与未决项（首版不阻塞，仅登记）
+## 9. 风险与未决项
 
-- MinerU 商业 API 的速率与费用：需在 README 中提示。  
-- 仅 PDF + URL 时，**学术 PDF** 与 **网页** 的「引用、脚注」在 MD 中表现差异大；RAG 切分策略放在 **pipeline generate/refine** 中调参。  
-- Word 若将来支持：新 ADR，独立 `ingest.backends.word`，默认 extra。
+- **本机显存/依赖**：VLM 类 backend 对 GPU 与**磁盘**（模型包）有要求，需在 README **前置说明**。  
+- **MinerU 小版本** 变更输出目录结构的风险：由 **4.2 单点解析函数** + **一条集成测试** 缓解。  
+- **HTML URL 需求**若出现：**单独 ADR**，**不得** 与 `mineru_local` 混为同一套「单一后端」故事，避免依赖膨胀。  
+- Word：未来独立 ADR。
 
 ---
 
 ## 10. 发布与版本
 
-- **SemVer**；`0.1.0` = ingest 目录+URL + 四阶段 pipeline 骨架 + 可跑通假数据/ mock。  
-- **Changelog** 中区分 **breaking**（manifest/JSONL 字段）与实现细节。
+- **SemVer**；**1.1 对应本稿** 的**摄取语义变更**（仅本地 MinerU、去 API、HTML URL 不纳入）。  
+- **Changelog** 中区分 **breaking**（manifest 字段、对 HTML 的拒绝行为）。
 
 ---
 
-## 11. 文档自审（本稿）
+## 11. 文档自审（1.1）
 
-- 已消除 Word 作为语料的要求；**明确** 目录镜像仅针对 PDF。  
-- URL 与目录两种输入的路径规则**无歧义**（单 URL 使用单独子树）。  
-- 范围与全量 DataFlow 的**切割**在 §7 写清。  
-- 无遗留「TBD」阻塞实现；**未决项** 已归入 §9，不混进硬性需求。
+- **与「仅 MinerU / 无商业 API」** 无矛盾；**pypdf 回退** 与 **API 三选一** 已移除。  
+- **HTML URL** 与 **MinerU** 的边界**显式**（未纳入 v1.1 解析）。  
+- **§4** 为可实现规格（CLI、目录解码、超时、错误码、中间目录）。  
+- 无未解决的「TBD」阻塞编码（数值级默认可在实现 PR 中定常量）。
 
 **下一步（按 brainstorming 工作流）**：你审阅本稿；通过后由 **writing-plans** 生成 `docs/superpowers/plans/` 下的分任务实现计划，并在 **独立 worktree/新仓** 中执行。
