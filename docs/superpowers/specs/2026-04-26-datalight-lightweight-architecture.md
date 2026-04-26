@@ -37,7 +37,7 @@
 | **HTML 为首页的普通网页 URL** 的**正文提取**                                                                                                                   | **首版不纳入**（其不是 MinerU 输入；若未来需要，单独 ADR，可用 trafilatura 等，与「MinerU 文档解析层」**解耦**） |
 | 目录中 **PDF/图片** → Markdown + `**ingest_manifest.jsonl`**                                                                                           | Word、PPT、专用 OCR 管线（可后续加模块）                                                   |
 | **首版（选项 A）**：**ingest MVP** 完整可验收；`datalight.pipeline` **仅占位/echo**                                                                               | **首版不验收** 业务级 **generate / refine / eval / filter**（第二迭代再实现，见 §3.3）          |
-| 仓内 `**datalight/`** 新包与 `**remote/**` 中 **原 DataFlow 形态参考代码** 物理分野                                                                                | 新包 **运行时** import `remote/` 为硬依赖；与上游 **git 子模块** 强绑定                         |
+| 仓内 `**datalight/`** 新包与 `**remote/`** 中 **原 DataFlow 形态参考代码** 物理分野                                                                                | 新包 **运行时** import `remote/` 为硬依赖；与上游 **git 子模块** 强绑定                         |
 | 统一清单行级字段与错误码（JSONL）                                                                                                                               | 生产级多租户、权限与计费；原库全部 Agent/ECO/RayOrch                                          |
 
 
@@ -72,7 +72,7 @@ datalight/
 
 **不处理**：Word；若目录出现 `.docx` 可 **记录 skip**（可配置 strict）。
 
-**输出**：**Markdown 文件树** + **`ingest_manifest.jsonl`（每行一条 JSON 记录，UTF-8）**；字段含 `source_path`、`output_md_path`、`status`、`error_code`、`sha256`（对源/下载体）、`parser: "mineru_local"`、以及 §4.4 的 **结构化解码字段**。**末行** 是否写 **可选** 汇总行由实现定；**首版** 以「**每输入文件/URL 一行**」为最低要求。
+**输出**：**Markdown 文件树** + `**ingest_manifest.jsonl`（每行一条 JSON 记录，UTF-8）**；字段含 `source_path`、`output_md_path`、`status`、`error_code`、`sha256`（对源/下载体）、`parser: "mineru_local"`、以及 §4.4 的 **结构化解码字段**。**末行** 是否写 **可选** 汇总行由实现定；**首版** 以「**每输入文件/URL 一行**」为最低要求。
 
 **依赖控制**：**摄取核心** 的「文档→MD」**仅** 依赖 **本机可执行的 `mineru` CLI**（由 `mineru` PyPI/发行说明安装）；**不** 将 **trafilatura** 列入 ingest 的**默认/硬依赖**（与 HTML 未纳入 v1.1 一致）。
 
@@ -86,8 +86,8 @@ datalight/
 
 #### 3.2.2 仓库名与 `remote/` 布局
 
-- **实施与发布仓库名**：**`DataLightFlow`**。  
-- **原 open-dataflow / DataFlow 形态参考代码** 置于 **`remote/`** 子目录，**不** 作为 `datalight` 安装分发的**运行时**依赖；**仅** 作对照、许可证或迁移期查阅。新实现位于 **`datalight/` 包**（**具体子路径** 在实现计划的 writing-plans 中固定）。
+- **实施与发布仓库名**：`**DataLightFlow`**。  
+- **原 open-dataflow / DataFlow 形态参考代码** 置于 `**remote/`** 子目录，**不** 作为 `datalight` 安装分发的**运行时**依赖；**仅** 作对照、许可证或迁移期查阅。新实现位于 `**datalight/` 包**（**具体子路径** 在实现计划的 writing-plans 中固定）。
 
 ### 3.3 模块 `datalight.pipeline`（首版 **选项 A**）
 
@@ -110,7 +110,7 @@ datalight/
 
 1. **单一后端**：`datalight.ingest.backends.mineru_local`（类名可调整）是 **唯一** 的「版式文档 → Markdown」实现；**不** 提供 pypdf / pdfplumber 等**替代解析链**作为回退。
 2. **可观测**：每次子进程**必须** 捕获 **stdout/stderr**（可配置截断长度），失败时写入 manifest 的 `error_detail`（脱敏后）。
-3. **可复现**：manifest 中记录 `mineru` **版本**、**`-b` backend**、**`--source local`**，以及**输出目录的规范化路径**（见 4.2）。
+3. **可复现**：manifest 中记录 `mineru` **版本**、`**-b` backend**、`**--source local`**，以及**输出目录的规范化路径**（见 4.2）。
 
 ### 4.2 子进程调用契约（与 DataFlow 参考实现对齐）
 
@@ -123,13 +123,13 @@ datalight/
   ```
   其中：  
   - `**-p**`：单文件，本地路径，**PDF 或 MinerU 支持的图片**。  
-  - `**-o`**：`intermediate_dir`：**本次 ingest 可配置的中间根**（如 `<output_dir>/.datalight/mineru_work` 或用户指定），**必须** 对并发/多次运行**安全**（每文件可再分子目录避免冲突，见 4.5）。  
-  - `**-b`**：backend 字符串，**默认** 与 MinerU 当前发行版推荐一致（如 `vlm-auto-engine` 等，**以配置为准**，文档中列出**受支持枚举**）。  
+  - `**-o`**：`intermediate_dir`：本次 ingest 可配置的中间根（如 `<output_dir>/.datalight/mineru_work` 或用户指定），必须 对并发/多次运行**安全**（每文件可再分子目录避免冲突，见 4.5）。  
+  - `**-b`**：backend 字符串，默认 与 MinerU 当前发行版推荐一致（如 `vlm-auto-engine` 等，以配置为准，文档中列出**受支持枚举**）。  
   - `**--source local`**：写死，表明 **仅本地** 资源与模型路径模式。
 - **成功输出路径（解码规则）**：在参考实现中，Markdown 主文件路径形态为：  
-  `os.path.join(intermediate_dir, <stem>, <backend_value>, f"{<stem>}.md")`  
-  即：**第一级子目录 = 无扩展名的文件名**；**第二级 = backend 名**；**其下为同主名 `.md`**。  
-  **DataLight 实现** 应用 **相同解码规则** 从 `intermediate_dir` 定位产出的 `*.md`，再 **复制或移动** 到**用户可见**的**镜像输出路径**（与 §3.2 的 `output_dir` 相对结构一致）。若 MinerU 小版本**变更了目录树**，**适配器** 应 **单点** 更新（`resolve_mineru_markdown_path(intermediate, stem, backend) -> Path`）。
+`os.path.join(intermediate_dir, <stem>, <backend_value>, f"{<stem>}.md")`  
+即：**第一级子目录 = 无扩展名的文件名**；**第二级 = backend 名**；**其下为同主名 `.md`**。  
+**DataLight 实现** 应用 **相同解码规则** 从 `intermediate_dir` 定位产出的 `*.md`，再 **复制或移动** 到**用户可见**的**镜像输出路径**（与 §3.2 的 `output_dir` 相对结构一致）。若 MinerU 小版本**变更了目录树**，**适配器** 应 **单点** 更新（`resolve_mineru_markdown_path(intermediate, stem, backend) -> Path`）。
 - **失败判定**：`subprocess` **returncode != 0** 视为该文件 **failed**；**returncode == 0** 但 **未找到** 期望的 `.md` 视为 **failed**（`E_MINERU_OUTPUT_MISSING`），并将 stderr 摘要写入 manifest。
 - **超时**：每文件**必须** 可配置超时（如默认 1h 或按页数估计，**具体数值在实现时写入模块常量并允许 CLI 覆盖**），超时**终止**子进程，记 `E_MINERU_TIMEOUT`。
 
@@ -166,7 +166,7 @@ datalight/
 
 ## 5. 数据流与可复现性
 
-- **ingest** 使用 **`ingest_manifest.jsonl`**，每行需含：**MinerU 版本**、**backend**、**配置哈希/时间**（可放在每行或运行级单独文件，**首版** 以每行+CLI 起止时间戳为**最低** 要求）。  
+- **ingest** 使用 `**ingest_manifest.jsonl`**，每行需含：**MinerU 版本**、**backend**、**配置哈希/时间**（可放在每行或运行级单独文件，**首版** 以每行+CLI 起止时间戳为**最低** 要求）。  
 - **pipeline 第二迭代** 的 `run_manifest.json` 等另行规定；**首版** 不强制。
 
 ---
@@ -180,15 +180,15 @@ datalight/
 
 ## 7. 与 DataFlow 的关系（方案 C + **DataLightFlow**）
 
-- **代码**：在 **`DataLightFlow`** 仓内，**`datalight`** 为**新主包**；**原** DataFlow 形态参考代码置于 **`remote/`**（**已确认** 布局），不替代 `datalight` 入口。  
-- **知识迁移**：**人工** 自 `remote/.../mineru_operators.py`（或迁档前之 `dataflow/operators/knowledge_cleaning/generate/mineru_operators.py`）中 **`FileOrURLToMarkdownConverterLocal`** 分支 **只借鉴** 本地子进程与输出路径解码；**不** 迁 API 版、**不** 直接依赖原 `DataFlowStorage` 的 `run`。  
+- **代码**：在 `**DataLightFlow`** 仓内，`**datalight**` 为**新主包**；**原** DataFlow 形态参考代码置于 `**remote/`**（**已确认** 布局），不替代 `datalight` 入口。  
+- **知识迁移**：**人工** 自 `remote/.../mineru_operators.py`（或迁档前之 `dataflow/operators/knowledge_cleaning/generate/mineru_operators.py`）中 `**FileOrURLToMarkdownConverterLocal`** 分支 **只借鉴** 本地子进程与输出路径解码；**不** 迁 API 版、**不** 直接依赖原 `DataFlowStorage` 的 `run`。  
 - **许可证**（同 1.0）；`remote/` 内第三方头文件/许可 **保留** 原样。
 
 ---
 
 ## 8. 测试策略
 
-- **ingest + MinerU**：**单元** 用 **子进程 mock**（注入假 `mineru` 可执行，验证参数与路径解码）；**集成** 在具备 **真实** **当前最新** `mineru` + 小 PDF 的环境跑 **一条 golden**：产出 `.md` 与 **`ingest_manifest.jsonl`** 行级字段。  
+- **ingest + MinerU**：**单元** 用 **子进程 mock**（注入假 `mineru` 可执行，验证参数与路径解码）；**集成** 在具备 **真实** **当前最新** `mineru` + 小 PDF 的环境跑 **一条 golden**：产出 `.md` 与 `**ingest_manifest.jsonl`** 行级字段。  
 - **不** 以「Mock 商业 API」作为摄取主测试（该路径**已删除**）。  
 - **URL 输出路径**：**单元** 测 **URL → `urls/<host_sanitized>/<fingerprint>/source.md`** 的规范化（不下载）。  
 - **pipeline**：**首版** 可 **仅** 测 `noop`/占位 JSONL 写入；**第二迭代** 再扩。  
@@ -207,16 +207,16 @@ datalight/
 
 ## 10. 发布与版本
 
-- **SemVer**；**1.1**：摄取语义（仅本地 MinerU、去 API、HTML URL 不纳入）。**1.2**：**选项 A**、**`ingest_manifest.jsonl`**、**URL 含 host 子目录**、**DataLightFlow + `remote/`**、**MinerU 用最新**、**pipeline 首版占位**。  
+- **SemVer**；**1.1**：摄取语义（仅本地 MinerU、去 API、HTML URL 不纳入）。**1.2**：**选项 A**、`**ingest_manifest.jsonl`**、**URL 含 host 子目录**、**DataLightFlow + `remote/`**、**MinerU 用最新**、**pipeline 首版占位**。  
 - **Changelog** 中区分 **breaking**（如 JSONL 与 URL 子树相对单 JSON 的迁移）。
 
 ---
 
 ## 11. 文档自审（1.2）
 
-- **选项 A**、**DataLightFlow**、**`remote/`**、**JSONL 清单**、**URL 含 host**、**MinerU 最新** 均有显式条文化，与 §1– §7 **一致**。  
+- **选项 A**、**DataLightFlow**、`**remote/`**、**JSONL 清单**、**URL 含 host**、**MinerU 最新** 均有显式条文化，与 §1– §7 **一致**。  
 - **§3.2.1** 已消除 `slug_or_hash` 歧义。  
 - **首版/第二迭代** 责任边界在 pipeline 上**清楚**。  
 - 仍由 **实现计划** 钉死：指纹宽度常量、`ingest` 行是否含运行级元数据、CI 是否 pin `mineru` 小版本。
 
-**下一步（按 brainstorming 工作流）**：由 **writing-plans** 在 **`DataLightFlow`** 仓生成分任务实现计划（`datalight` 新包 + **`remote/`** 迁移动作 + **ingest MVP** 优先），再按 PR 切分实现。
+**下一步（按 brainstorming 工作流）**：由 **writing-plans** 在 `**DataLightFlow`** 仓生成分任务实现计划（`datalight` 新包 + `**remote/**` 迁移动作 + **ingest MVP** 优先），再按 PR 切分实现。
