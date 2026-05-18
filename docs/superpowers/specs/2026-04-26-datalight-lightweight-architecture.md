@@ -166,7 +166,7 @@ datalight/
 
 ## 5. 数据流与可复现性
 
-- **ingest** 使用 `**ingest_manifest.jsonl`**，每行需含：**MinerU 版本**、**backend**、**配置哈希/时间**（可放在每行或运行级单独文件，**首版** 以每行+CLI 起止时间戳为**最低** 要求）。  
+- **ingest** 使用 `**ingest_manifest.jsonl`**，每行需含：MinerU 版本、backend、配置哈希/时间（可放在每行或运行级单独文件，首版 以每行+CLI 起止时间戳为**最低** 要求）。  
 - **pipeline 第二迭代** 的 `run_manifest.json` 等另行规定；**首版** 不强制。
 
 ---
@@ -180,7 +180,7 @@ datalight/
 
 ## 7. 与 DataFlow 的关系（方案 C + **DataLightFlow**）
 
-- **代码**：在 `**DataLightFlow`** 仓内，`**datalight**` 为**新主包**；**原** DataFlow 形态参考代码置于 `**remote/`**（**已确认** 布局），不替代 `datalight` 入口。  
+- **代码**：在 `**DataLightFlow`** 仓内，`**datalight`** 为**新主包**；**原** DataFlow 形态参考代码置于 `**remote/`**（**已确认** 布局），不替代 `datalight` 入口。  
 - **知识迁移**：**人工** 自 `remote/.../mineru_operators.py`（或迁档前之 `dataflow/operators/knowledge_cleaning/generate/mineru_operators.py`）中 `**FileOrURLToMarkdownConverterLocal`** 分支 **只借鉴** 本地子进程与输出路径解码；**不** 迁 API 版、**不** 直接依赖原 `DataFlowStorage` 的 `run`。  
 - **许可证**（同 1.0）；`remote/` 内第三方头文件/许可 **保留** 原样。
 
@@ -219,4 +219,4 @@ datalight/
 - **首版/第二迭代** 责任边界在 pipeline 上**清楚**。  
 - 仍由 **实现计划** 钉死：指纹宽度常量、`ingest` 行是否含运行级元数据、CI 是否 pin `mineru` 小版本。
 
-**下一步（按 brainstorming 工作流）**：由 **writing-plans** 在 `**DataLightFlow`** 仓生成分任务实现计划（`datalight` 新包 + `**remote/**` 迁移动作 + **ingest MVP** 优先），再按 PR 切分实现。
+**下一步（按 brainstorming 工作流）**：由 **writing-plans** 在 `**DataLightFlow`** 仓生成分任务实现计划（`datalight` 新包 + `**remote/`** 迁移动作 + **ingest MVP** 优先），再按 PR 切分实现。

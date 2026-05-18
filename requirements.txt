@@ -19,6 +19,7 @@ pytest
 rich
 docstring_parser
 pydantic
+typer>=0.9.0
 nltk
 colorama
 gradio>5

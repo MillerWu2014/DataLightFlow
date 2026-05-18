@@ -40,10 +40,14 @@ Documentation = "https://opendcai.github.io/DataFlow-Doc/"
 
 [project.scripts]
 dataflow = "dataflow.cli:app"
+datalight = "datalight.cli:app"
 
 [tool.setuptools]
 include-package-data = true
-packages = ["dataflow"]  # 显式指定主包
+
+[tool.setuptools.packages.find]
+where = [".", "src"]
+include = ["dataflow", "dataflow.*", "datalight", "datalight.*"]
 
 
 [tool.setuptools.dynamic]
