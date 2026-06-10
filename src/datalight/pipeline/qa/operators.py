@@ -4,9 +4,9 @@ import json
 import re
 from pathlib import Path
 
+from datalight.llm import LLMClient
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.qa.language import language_instruction, normalize_target_language
-from datalight.pipeline.qa.llm import LLMClient
 
 DEFAULT_INSTRUCTION = "Please answer the following question based on the provided information."
 
@@ -81,8 +81,13 @@ class Text2QAGeneratorOperator(Operator):
                 if not question or not answer:
                     continue
                 item = dict(row)
-                item["generated_question"] = question
-                item["generated_answer"] = answer
+                item["question"] = question
+                item["answer"] = answer
+                item["context"] = str(row.get("chunk_text", ""))
+                item["hop_type"] = "singlehop"
+                item["reasoning_steps"] = []
+                item["supporting_facts"] = []
+                item["qa_type"] = "singlehop"
                 expanded.append(item)
         return expanded
 
@@ -126,8 +131,8 @@ class Text2QAEvaluatorOperator(Operator):
     def _qa_block(row: Record) -> str:
         return (
             f"Context: {row['chunk_text']}\n"
-            f"Question: {row['generated_question']}\n"
-            f"Answer: {row['generated_answer']}"
+            f"Question: {row['question']}\n"
+            f"Answer: {row['answer']}"
         )
 
     def _build_question_quality_prompt(self, row: Record) -> str:
@@ -205,8 +210,8 @@ class AlpacaExportOperator(Operator):
             for row in rows:
                 item = {
                     "instruction": self.instruction,
-                    "input": row.get("expanded_question") or row["generated_question"],
-                    "output": row.get("expanded_answer") or row["generated_answer"],
+                    "input": row.get("expanded_question") or row["question"],
+                    "output": row.get("expanded_answer") or row["answer"],
                     "source_md": row["source_md"],
                     "chunk_index": row["chunk_index"],
                 }

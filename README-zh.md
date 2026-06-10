@@ -86,7 +86,7 @@ pip install -e .
 如果只在源码目录中直接运行，也可以使用：
 
 ```bash
-PYTHONPATH=src python -m datalight.cli version
+PYTHONPATH=src python -c "from datalight.service import version; print(version())"
 ```
 
 ### 配置 MinerU
@@ -108,7 +108,7 @@ datalight version
 或：
 
 ```bash
-PYTHONPATH=src python -m datalight.cli version
+PYTHONPATH=src python -c "from datalight.service import version; print(version())"
 ```
 
 ### 配置 LM Studio
@@ -498,7 +498,7 @@ qa_multihop_export.jsonl
 ```python
 from pathlib import Path
 
-from datalight.pipeline.qa.llm import OpenAICompatibleLLMClient
+from datalight.llm import OpenAICompatibleLLMClient
 from datalight.pipeline.qa.runner import run_markdown_qa_pipeline
 
 llm = OpenAICompatibleLLMClient(

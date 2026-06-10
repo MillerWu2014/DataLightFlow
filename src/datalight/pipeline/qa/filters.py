@@ -18,8 +18,8 @@ class QADedupFilterOperator(Operator):
         seen_keys: set[tuple[str, str]] = set()
         seen_texts: list[str] = []
         for row in rows:
-            question = _get_text(row, "generated_question", "question", "input")
-            answer = _get_text(row, "generated_answer", "answer", "output")
+            question = _get_text(row, "question")
+            answer = _get_text(row, "answer")
             key = (_normalize(question), _normalize(answer))
             if key in seen_keys:
                 continue

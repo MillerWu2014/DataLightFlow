@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from datalight.pipeline.core import Operator, Record
+from datalight.llm import LLMClient
 from datalight.pipeline.qa.language import language_instruction, normalize_target_language
-from datalight.pipeline.qa.llm import LLMClient
+from datalight.utils.json_payload import extract_json_payload
 
 MULTIHOP_INSTRUCTION = "Answer the multi-hop question using the provided supporting facts."
 
@@ -30,7 +31,7 @@ class MultiHopContextBuilderOperator(Operator):
             item["intermediate"] = context_sentences[1]
             item["conclusion"] = context_sentences[2] if len(context_sentences) > 2 else context_sentences[-1]
             item["related_contexts"] = sentences[self.min_context_sentences :]
-            item["multihop_context"] = " ".join(context_sentences)
+            item["context"] = " ".join(context_sentences)
             item["supporting_sentence_count"] = len(context_sentences)
             out.append(item)
         return out
@@ -49,7 +50,7 @@ class MultiHopQAGeneratorOperator(Operator):
 
     def run(self, rows: list[Record]) -> list[Record]:
         prompts = [
-            build_multihop_prompt(row["multihop_context"], target_language=self.target_language)
+            build_multihop_prompt(str(row["context"]), target_language=self.target_language)
             for row in rows
         ]
         responses = self.llm_client.generate(
@@ -65,8 +66,9 @@ class MultiHopQAGeneratorOperator(Operator):
             if not qa:
                 continue
             item = dict(row)
-            item["generated_question"] = qa["question"]
-            item["generated_answer"] = qa["answer"]
+            item["question"] = qa["question"]
+            item["answer"] = qa["answer"]
+            item["hop_type"] = "multihop"
             item["reasoning_steps"] = qa.get("reasoning_steps", [])
             item["supporting_facts"] = qa.get("supporting_facts", [])
             item["qa_type"] = qa.get("type", "")
@@ -85,8 +87,8 @@ class MultiHopAlpacaExportOperator(Operator):
             for row in rows:
                 item = {
                     "instruction": self.instruction,
-                    "input": row["generated_question"],
-                    "output": row["generated_answer"],
+                    "input": row["question"],
+                    "output": row["answer"],
                     "source_md": row["source_md"],
                     "chunk_index": row["chunk_index"],
                     "metadata": {
@@ -129,7 +131,7 @@ def build_multihop_prompt(context: str, *, target_language: str = "zh") -> str:
 
 
 def parse_multihop_response(response: str) -> dict[str, Any]:
-    payload = _extract_json_payload(response)
+    payload = extract_json_payload(response, allow_array=True, error_context="multi-hop response")
     data = json.loads(payload)
     if isinstance(data, list):
         if not data:
@@ -154,19 +156,6 @@ def parse_multihop_response(response: str) -> dict[str, Any]:
         "supporting_facts": facts,
         "type": str(data.get("type", "")).strip(),
     }
-
-
-def _extract_json_payload(response: str) -> str:
-    text = response.strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text).strip()
-    if text.startswith("{") or text.startswith("["):
-        return text
-    start = min([idx for idx in (text.find("{"), text.find("[")) if idx >= 0], default=-1)
-    if start < 0:
-        raise ValueError("No JSON object found in multi-hop response")
-    return text[start:]
 
 
 def _split_sentences(text: str) -> list[str]:

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass
 from pathlib import Path
 
 from datalight.config import PromptConfig
-from datalight.pipeline.core import Pipeline, Record
+from datalight.llm import LLMClient
+from datalight.pipeline.core import Pipeline
+from datalight.pipeline.qa.models import MarkdownMultiHopQAPipelineResult, MarkdownQAPipelineResult
 from datalight.pipeline.qa.expansion import QAExpansionOperator
-from datalight.pipeline.qa.llm import LLMClient
 from datalight.pipeline.qa.thinking import QAThinkOperator
 from datalight.pipeline.qa.operators import (
     AlpacaExportOperator,
@@ -21,24 +20,7 @@ from datalight.pipeline.qa.multihop import (
     MultiHopContextBuilderOperator,
     MultiHopQAGeneratorOperator,
 )
-
-
-@dataclass
-class MarkdownQAPipelineResult:
-    chunks_path: Path
-    generated_path: Path
-    scored_path: Path
-    export_path: Path
-    expanded_path: Path | None = None
-    think_path: Path | None = None
-
-
-@dataclass
-class MarkdownMultiHopQAPipelineResult:
-    chunks_path: Path
-    contexts_path: Path
-    generated_path: Path
-    export_path: Path
+from datalight.utils.jsonl import write_jsonl
 
 
 def run_markdown_qa_pipeline(
@@ -67,7 +49,7 @@ def run_markdown_qa_pipeline(
 
     chunks = MarkdownChunkOperator(chunk_words=chunk_words, overlap_words=overlap_words).run(rows)
     chunks_path = output_dir / "chunks.jsonl"
-    _write_jsonl(chunks_path, chunks)
+    write_jsonl(chunks_path, chunks)
 
     generated = Text2QAGeneratorOperator(
         llm_client=llm_client,
@@ -76,7 +58,7 @@ def run_markdown_qa_pipeline(
         system_prompt=prompt_config.render("singlehop", "") if prompt_config else "",
     ).run(chunks)
     generated_path = output_dir / "qa_generated.jsonl"
-    _write_jsonl(generated_path, generated)
+    write_jsonl(generated_path, generated)
 
     scored = Text2QAEvaluatorOperator(
         llm_client=llm_client,
@@ -84,7 +66,7 @@ def run_markdown_qa_pipeline(
         system_prompt=prompt_config.render("evaluator", "") if prompt_config else "",
     ).run(generated)
     scored_path = output_dir / "qa_scored.jsonl"
-    _write_jsonl(scored_path, scored)
+    write_jsonl(scored_path, scored)
 
     filtered = QAFilterOperator(
         min_question_quality=min_question_quality,
@@ -103,7 +85,7 @@ def run_markdown_qa_pipeline(
             system_prompt=prompt_config.render("expansion", "") if prompt_config else None,
         ).run(filtered)
         expanded_path = output_dir / "qa_expanded.jsonl"
-        _write_jsonl(expanded_path, rows_to_export)
+        write_jsonl(expanded_path, rows_to_export)
 
     think_path: Path | None = None
     if add_think:
@@ -113,7 +95,7 @@ def run_markdown_qa_pipeline(
             system_prompt=prompt_config.render("thinking", "") if prompt_config else None,
         ).run(rows_to_export)
         think_path = output_dir / "qa_with_think.jsonl"
-        _write_jsonl(think_path, rows_to_export)
+        write_jsonl(think_path, rows_to_export)
 
     export_path = output_dir / "qa_export.jsonl"
     Pipeline(
@@ -151,11 +133,11 @@ def run_markdown_multihop_qa_pipeline(
 
     chunks = MarkdownChunkOperator(chunk_words=chunk_words, overlap_words=overlap_words).run(rows)
     chunks_path = output_dir / "chunks.jsonl"
-    _write_jsonl(chunks_path, chunks)
+    write_jsonl(chunks_path, chunks)
 
     contexts = MultiHopContextBuilderOperator(min_context_sentences=min_context_sentences).run(chunks)
     contexts_path = output_dir / "multihop_contexts.jsonl"
-    _write_jsonl(contexts_path, contexts)
+    write_jsonl(contexts_path, contexts)
 
     generated = MultiHopQAGeneratorOperator(
         llm_client=llm_client,
@@ -163,7 +145,7 @@ def run_markdown_multihop_qa_pipeline(
         system_prompt=prompt_config.render("multihop", "") if prompt_config else None,
     ).run(contexts)
     generated_path = output_dir / "qa_multihop_generated.jsonl"
-    _write_jsonl(generated_path, generated)
+    write_jsonl(generated_path, generated)
 
     export_path = output_dir / "qa_multihop_export.jsonl"
     MultiHopAlpacaExportOperator(output_path=export_path).run(generated)
@@ -174,10 +156,3 @@ def run_markdown_multihop_qa_pipeline(
         generated_path=generated_path,
         export_path=export_path,
     )
-
-
-def _write_jsonl(path: Path, rows: list[Record]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        for row in rows:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")

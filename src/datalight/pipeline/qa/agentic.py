@@ -4,8 +4,8 @@ import json
 import re
 from typing import Any
 
+from datalight.llm import LLMClient
 from datalight.pipeline.core import Operator, Record
-from datalight.pipeline.qa.llm import LLMClient
 
 
 class DepthQAGeneratorOperator(Operator):
@@ -23,11 +23,12 @@ class DepthQAGeneratorOperator(Operator):
             if not qa:
                 continue
             item = dict(row)
-            item["generated_question"] = qa["question"]
-            item["generated_answer"] = qa["answer"]
+            item["question"] = qa["question"]
+            item["answer"] = qa["answer"]
             item["identifier"] = qa.get("identifier", row.get("identifier", ""))
             item["relation"] = qa.get("relation", "")
             item["qa_type"] = "depth"
+            item["hop_type"] = "singlehop"
             out.append(item)
         return out
 
@@ -56,11 +57,12 @@ class WidthQAGeneratorOperator(Operator):
                 source_indices = list(range(len(window)))
             out.append(
                 {
-                    "generated_question": qa["question"],
-                    "generated_answer": qa["answer"],
+                    "question": qa["question"],
+                    "answer": qa["answer"],
                     "source_question_indices": source_indices,
                     "content_identifier": qa.get("content_identifier", ""),
                     "qa_type": "width",
+                    "hop_type": "singlehop",
                     "source_rows": window,
                 },
             )
@@ -75,8 +77,8 @@ def _build_depth_prompt(row: Record) -> str:
     return (
         "Create one deeper follow-up QA pair from this existing QA.\n"
         "Return JSON with question, answer, identifier, and relation.\n\n"
-        f"Question: {row.get('generated_question', '')}\n"
-        f"Answer: {row.get('generated_answer', '')}\n"
+        f"Question: {row.get('question', '')}\n"
+        f"Answer: {row.get('answer', '')}\n"
         f"Identifier: {row.get('identifier', '')}"
     )
 
@@ -85,8 +87,8 @@ def _build_width_prompt(rows: list[Record]) -> str:
     items = []
     for index, row in enumerate(rows):
         items.append(
-            f"[{index}] Question: {row.get('generated_question', '')}\n"
-            f"[{index}] Answer: {row.get('generated_answer', '')}\n"
+            f"[{index}] Question: {row.get('question', '')}\n"
+            f"[{index}] Answer: {row.get('answer', '')}\n"
             f"[{index}] Identifier: {row.get('identifier', '')}"
         )
     return (

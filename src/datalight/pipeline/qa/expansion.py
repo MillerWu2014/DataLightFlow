@@ -1,22 +1,16 @@
 from __future__ import annotations
 
 import json
-import re
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
+from datalight.llm import LLMClient
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.qa.language import language_instruction, normalize_target_language
-from datalight.pipeline.qa.llm import LLMClient
+from datalight.pipeline.qa.models import QAExpansionPipelineResult
+from datalight.utils.json_payload import extract_json_payload
+from datalight.utils.jsonl import read_jsonl, write_jsonl
 
 EXPANSION_MODES = {"detail", "contextual", "reasoning"}
-
-
-@dataclass
-class QAExpansionPipelineResult:
-    input_path: Path
-    output_path: Path
 
 
 class QAExpansionOperator(Operator):
@@ -79,14 +73,14 @@ def run_qa_expansion_pipeline(
     target_language: str = "zh",
     system_prompt: str | None = None,
 ) -> QAExpansionPipelineResult:
-    rows = _read_jsonl(input_path)
+    rows = read_jsonl(input_path)
     expanded = QAExpansionOperator(
         llm_client=llm_client,
         mode=mode,
         target_language=target_language,
         system_prompt=system_prompt,
     ).run(rows)
-    _write_jsonl(output_path, expanded)
+    write_jsonl(output_path, expanded)
     return QAExpansionPipelineResult(input_path=input_path, output_path=output_path)
 
 
@@ -107,9 +101,9 @@ def build_expansion_prompt(row: Record, *, mode: str = "detail", target_language
         "contextual": "Rewrite the question to sound more natural and context-rich, then refine the answer.",
         "reasoning": "Add concise reasoning while keeping the final answer grounded.",
     }[mode]
-    context = str(row.get("chunk_text") or row.get("multihop_context") or "")
-    question = str(row.get("generated_question") or row.get("question") or row.get("input") or "")
-    answer = str(row.get("generated_answer") or row.get("answer") or row.get("output") or "")
+    context = str(row.get("context") or row.get("chunk_text") or "")
+    question = str(row.get("question") or "")
+    answer = str(row.get("answer") or "")
     return (
         "Expand this QA pair without changing its core meaning.\n"
         f"{language_instruction(target_language)}\n"
@@ -129,7 +123,7 @@ def build_expansion_prompt(row: Record, *, mode: str = "detail", target_language
 
 
 def parse_expansion_response(response: str) -> dict[str, str]:
-    payload = _extract_json_payload(response)
+    payload = extract_json_payload(response, error_context="expansion response")
     data = json.loads(payload)
     if not isinstance(data, dict):
         raise ValueError("Expansion response must be a JSON object")
@@ -143,33 +137,3 @@ def parse_expansion_response(response: str) -> dict[str, str]:
         "expansion_type": str(data.get("expansion_type", "")).strip(),
         "expansion_notes": str(data.get("expansion_notes", "")).strip(),
     }
-
-
-def _extract_json_payload(response: str) -> str:
-    text = response.strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text).strip()
-    if text.startswith("{"):
-        return text
-    start = text.find("{")
-    if start < 0:
-        raise ValueError("No JSON object found in expansion response")
-    return text[start:]
-
-
-def _read_jsonl(path: Path) -> list[Record]:
-    rows: list[Record] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            data: Any = json.loads(line)
-            if isinstance(data, dict):
-                rows.append(data)
-    return rows
-
-
-def _write_jsonl(path: Path, rows: list[Record]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        for row in rows:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")

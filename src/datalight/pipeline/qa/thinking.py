@@ -1,20 +1,14 @@
 from __future__ import annotations
 
 import json
-import re
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
+from datalight.llm import LLMClient
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.qa.language import language_instruction, normalize_target_language
-from datalight.pipeline.qa.llm import LLMClient
-
-
-@dataclass
-class QAThinkingPipelineResult:
-    input_path: Path
-    output_path: Path
+from datalight.pipeline.qa.models import QAThinkingPipelineResult
+from datalight.utils.json_payload import extract_json_payload
+from datalight.utils.jsonl import read_jsonl, write_jsonl
 
 
 class QAThinkOperator(Operator):
@@ -61,12 +55,12 @@ class QAThinkOperator(Operator):
             if answer_key == "expanded_answer":
                 item.setdefault("original_expanded_answer", original_answer)
             else:
-                item.setdefault("original_generated_answer", original_answer)
+                item.setdefault("original_answer", original_answer)
             if rebuilt_answer:
                 item[answer_key] = rebuilt_answer
             elif answer_key not in item:
                 item[answer_key] = original_answer
-            # Keep generated_question access explicit even when the final question is expanded.
+            # Keep canonical question field available even when question is expanded.
             if question_key not in item:
                 item[question_key] = ""
             out.append(item)
@@ -81,13 +75,13 @@ def run_qa_thinking_pipeline(
     target_language: str = "zh",
     system_prompt: str | None = None,
 ) -> QAThinkingPipelineResult:
-    rows = _read_jsonl(input_path)
+    rows = read_jsonl(input_path)
     thought = QAThinkOperator(
         llm_client=llm_client,
         target_language=target_language,
         system_prompt=system_prompt,
     ).run(rows)
-    _write_jsonl(output_path, thought)
+    write_jsonl(output_path, thought)
     return QAThinkingPipelineResult(input_path=input_path, output_path=output_path)
 
 
@@ -106,7 +100,7 @@ def build_think_prompt(row: Record, *, target_language: str = "zh") -> str:
     question_key, answer_key = _final_qa_keys(row)
     question = str(row.get(question_key, ""))
     answer = str(row.get(answer_key, ""))
-    context = str(row.get("chunk_text") or row.get("multihop_context") or "")
+    context = str(row.get("context") or row.get("chunk_text") or "")
     return (
         "Given the same question, produce a concise think field and rebuild the answer from it.\n"
         f"{language_instruction(target_language)}\n"
@@ -124,7 +118,7 @@ def build_think_prompt(row: Record, *, target_language: str = "zh") -> str:
 
 
 def parse_think_response(response: str) -> tuple[str, str]:
-    payload = _extract_json_payload(response)
+    payload = extract_json_payload(response, error_context="think response")
     data = json.loads(payload)
     if not isinstance(data, dict):
         raise ValueError("Think response must be a JSON object")
@@ -136,34 +130,4 @@ def parse_think_response(response: str) -> tuple[str, str]:
 def _final_qa_keys(row: Record) -> tuple[str, str]:
     if row.get("expanded_question") or row.get("expanded_answer"):
         return "expanded_question", "expanded_answer"
-    return "generated_question", "generated_answer"
-
-
-def _extract_json_payload(response: str) -> str:
-    text = response.strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text).strip()
-    if text.startswith("{"):
-        return text
-    start = text.find("{")
-    if start < 0:
-        raise ValueError("No JSON object found in think response")
-    return text[start:]
-
-
-def _read_jsonl(path: Path) -> list[Record]:
-    rows: list[Record] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            data: Any = json.loads(line)
-            if isinstance(data, dict):
-                rows.append(data)
-    return rows
-
-
-def _write_jsonl(path: Path, rows: list[Record]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        for row in rows:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    return "question", "answer"

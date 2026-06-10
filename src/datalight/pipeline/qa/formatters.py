@@ -22,8 +22,8 @@ class QAExtractorOperator(Operator):
             for pair in pairs:
                 if not isinstance(pair, dict):
                     continue
-                question = str(pair.get("question") or pair.get("generated_question") or "").strip()
-                answer = str(pair.get("answer") or pair.get("generated_answer") or "").strip()
+                question = str(pair.get("question") or "").strip()
+                answer = str(pair.get("answer") or "").strip()
                 if not question or not answer:
                     continue
                 out.append(
