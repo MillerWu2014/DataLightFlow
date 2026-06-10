@@ -1,0 +1,4 @@
+2026-06-10 17:43:28 | INFO     | datalight:<string>:<module>:8 - root logger test
+2026-06-10 17:43:28 | WARNING  | datalight.pipeline.qa:<string>:<module>:10 - child logger test
+2026-06-10 18:51:01 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:49 - 单跳 QA 开始: files=['2023年航空器活动区驾驶手册.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/manual_review/service_qa_20260610_185101/singlehop/2023年航空器活动区驾驶手册, taxonomy=True
+2026-06-10 18:51:01 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:63 - 切块完成: 4 chunks

@@ -50,6 +50,32 @@ class LLMSettings:
 
 
 @dataclass
+class TaxonomyCategory:
+    level1_name: str
+    level2_name: str
+    focus: str
+    prompt_hint: str
+
+
+@dataclass
+class TaxonomySettings:
+    task_type: dict[str, str] = field(default_factory=dict)
+    categories: list[TaxonomyCategory] = field(default_factory=list)
+    reasoning_style: dict[str, str] = field(default_factory=dict)
+
+    def is_complete(self) -> bool:
+        if not self.task_type or not self.reasoning_style or not self.categories:
+            return False
+        return all(
+            category.level1_name
+            and category.level2_name
+            and category.focus
+            and category.prompt_hint
+            for category in self.categories
+        )
+
+
+@dataclass
 class PromptConfig:
     topic: str = ""
     singlehop_system: str | None = None
@@ -71,6 +97,7 @@ class DatalightConfig:
     llm: LLMSettings = field(default_factory=LLMSettings)
     qa: QASettings = field(default_factory=QASettings)
     prompts: PromptConfig = field(default_factory=PromptConfig)
+    taxonomy: TaxonomySettings = field(default_factory=TaxonomySettings)
 
     @classmethod
     def from_file(cls, path: Path) -> "DatalightConfig":
@@ -88,6 +115,7 @@ class DatalightConfig:
         prompts_data = _dict_value(data, "prompts")
 
         topic = str(qa_data.get("topic") or "")
+
         return cls(
             mineru=MineruSettings(
                 executable=_optional_str(mineru_data.get("executable")),
@@ -111,11 +139,41 @@ class DatalightConfig:
                 expansion_system=_optional_str(prompts_data.get("expansion_system")),
                 thinking_system=_optional_str(prompts_data.get("thinking_system")),
             ),
+            taxonomy=parse_taxonomy(data),
         )
 
     def prompt_config(self) -> PromptConfig:
         self.prompts.topic = self.qa.topic
         return self.prompts
+
+    def taxonomy_data(self) -> TaxonomySettings:
+        return self.taxonomy
+
+
+def load_taxonomy(path: Path) -> TaxonomySettings:
+    """Load and parse the taxonomy section from a datalight config file."""
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not isinstance(data, dict):
+        raise ValueError("Config file must contain a YAML mapping")
+    return parse_taxonomy(data)
+
+
+def parse_taxonomy(data: dict[str, Any]) -> TaxonomySettings:
+    """Parse the taxonomy section from a config mapping."""
+    taxonomy_data = data.get("taxonomy")
+    if taxonomy_data is None:
+        return TaxonomySettings()
+    if not isinstance(taxonomy_data, dict):
+        raise ValueError("Config field 'taxonomy' must be a mapping")
+
+    return TaxonomySettings(
+        task_type=_parse_str_mapping(taxonomy_data.get("task_type"), "taxonomy.task_type"),
+        categories=_parse_taxonomy_categories(taxonomy_data.get("level1_name")),
+        reasoning_style=_parse_str_mapping(
+            taxonomy_data.get("reasoning_style"),
+            "taxonomy.reasoning_style",
+        ),
+    )
 
 
 def _dict_value(data: dict[str, Any], key: str) -> dict[str, Any]:
@@ -147,3 +205,40 @@ def _optional_float(value: Any) -> float | None:
     if value is None:
         return None
     return float(value)
+
+
+def _parse_str_mapping(value: Any, field_name: str) -> dict[str, str]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise ValueError(f"Config field {field_name!r} must be a mapping")
+    return {str(key): str(item) for key, item in value.items()}
+
+
+def _parse_taxonomy_categories(value: Any) -> list[TaxonomyCategory]:
+    if value is None:
+        return []
+    if not isinstance(value, dict):
+        raise ValueError("Config field 'taxonomy.level1_name' must be a mapping")
+
+    categories: list[TaxonomyCategory] = []
+    for level1, level2_items in value.items():
+        if not isinstance(level2_items, list):
+            raise ValueError(
+                f"taxonomy.level1_name[{level1!r}] must be a list of mappings",
+            )
+        for index, item in enumerate(level2_items):
+            if not isinstance(item, dict):
+                raise ValueError(
+                    f"taxonomy.level1_name[{level1!r}][{index}] must be a mapping",
+                )
+            categories.append(
+                TaxonomyCategory(
+                    level1_name=str(level1).strip(),
+                    level2_name=str(item.get("level2_name") or "").strip(),
+                    focus=str(item.get("focus") or "").strip(),
+                    prompt_hint=str(item.get("prompt_hint") or "").strip(),
+                ),
+            )
+    return categories
+

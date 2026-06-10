@@ -499,7 +499,7 @@ qa_multihop_export.jsonl
 from pathlib import Path
 
 from datalight.llm import OpenAICompatibleLLMClient
-from datalight.pipeline.qa.runner import run_markdown_qa_pipeline
+from datalight.pipeline.runner import run_markdown_qa_pipeline
 
 llm = OpenAICompatibleLLMClient(
     base_url="http://127.0.0.1:1234/v1",

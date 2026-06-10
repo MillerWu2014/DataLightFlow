@@ -1,0 +1,107 @@
+mineru:
+  # 本地 MinerU CLI 的可执行文件路径。
+  # 如果不配置，则依次回退到环境变量 MINERU_EXECUTABLE 和 PATH 中的 mineru。
+  executable: /Users/miller/miniconda3/envs/mineru/bin/mineru
+
+output:
+  # 默认输出根目录。
+  # CLI 未显式传 --output-dir 或 --output 时，会按命令类型使用该目录下的子目录。
+  root: .output
+
+llm:
+  # 首版支持 lmstudio 和 openai-compatible，二者都使用 OpenAI-compatible Chat Completions 协议。
+  provider: lmstudio
+  base_url: http://192.168.101.232:1234/v1
+  model: qwen/qwen3.6-35b-a3b
+  timeout_sec: 180
+  temperature: 0.5
+
+# 分类体系
+taxonomy:
+  task_type:
+    fact_qa: 领域事实精确问答，适合定义、缩写、数字、阈值、岗位职责等短问答
+    rule_explain: 规则解释，说明条款含义、适用条件、例外和边界
+    procedure: 流程执行，说明步骤、阶段、检查项或审批链路
+    scenario: 情景处置，针对异常、冲突、边界条件给出判断依据和建议
+    compare: 对比权衡，比较标准、方案、条件或优先级差异
+    instruction_following: 领域内指令遵循治理样本，如表格、分点、长度、角色要求
+    refusal_uncertainty: 领域不确定性处理，要求说明依据不足、拒绝编造
+    abbreviation_definition: 民航缩略语/术语释义
+
+  level1_name:
+    运行推理类:
+      - level2_name: 情景处置
+        focus: 异常、失效、突发事件、应急响应、特殊运行条件下的处置判断
+        prompt_hint: 1.异常情景下的决策、处置顺序、影响评估与恢复建议，强调触发条件和响应逻辑。2.某个业务场景下的的处置依据、处置方法等，强调处置逻辑。
+      - level2_name: 比较与选择
+        focus: 方案权衡、类别区分、优先级选择、运行策略比较。
+        prompt_hint: 优先生成需要比较候选方案、角色分工、优先级或规则差异的复杂问答。
+    流程执行类:
+      - level2_name: 流程与步骤
+        focus: 流程顺序、办理步骤、操作程序、协同链路。
+        prompt_hint: 优先生成跨步骤、跨角色、包含前后依赖关系的流程执行样本。
+      - level2_name: 检测维护与验收
+        focus: 检查、检验、维护、评估、验收与闭环处理。
+        prompt_hint: 优先生成检查闭环、验收判断、维护触发与整改流程样本。
+    规则约束类:
+      - level2_name: 规则要求
+        focus: 应当、不得、必须、禁止等业务规则和合规要求。
+        prompt_hint: 优先生成角色在具体业务场景下应做什么、不能做什么的规则型样本。
+      - level2_name: 阈值与边界
+        focus: 时间、数量、距离、容量、限制条件等明确阈值。
+        prompt_hint: 仅在原文明确给出数值或边界条件时生成；禁止估算、补全或推测。
+      - level2_name: 职责与权限
+        focus: 职责分工、批准权限、岗位角色、责任边界。
+        prompt_hint: 优先生成多主体协同、审批责任和最终责任归属的样本。
+      - level2_name: 条件与适用判定
+        focus: 适用条件、触发条件、前提约束、判定标准。
+        prompt_hint: 优先生成在不同条件下如何判定是否适用某规则、程序或处置方式的样本。
+  reasoning_style:
+    direct: 直接判断或简短依据
+    chain_of_thought: 多步推理，适合复杂规则、流程、情景、对比
+    rule_based: 明确依据规则/条款推导
+    refusal: 不确定性或拒绝编造样本的边界说明
+
+qa:
+  # QA 构建主题。各 system prompt 中的 {topic} 会被替换为该值。
+  # 如果为空字符串，则不启用明确 topic 约束。
+  topic: 机场运行、航班运行、保障服务、机组、航空器、运行指挥、空管、飞行区、A-CDM、应急
+
+prompts:
+  singlehop_system: |
+    你是民航领域一个业务专家，负责构建高质量的问答对。
+    你只围绕以下 Topic 构建高质量问答对：
+    {topic}
+
+    如果上下文与 Topic 无关，请返回空的 Q 和 A。
+
+  evaluator_system: |
+    你是一个 QA 数据质量评估专家。
+    你只评估与以下 Topic 相关的问答对：
+    {topic}
+
+    评分时需要重点判断：
+    1. 问题是否围绕 Topic。
+    2. 答案是否来自上下文。
+    3. 问答是否适合训练或 RAG。
+
+  multihop_system: |
+    你是民航领域一个业务专家，负责构建高质量的问答对。
+    你只围绕以下 Topic 生成需要连接 2-3 个事实的问题：
+    {topic}
+
+    如果上下文与 Topic 无关，请返回空 JSON 对象。
+
+  expansion_system: |
+    你是民航领域一个业务专家，负责构建高质量的问答对，负责对QA对进行扩写
+    你只扩写与以下 Topic 相关的 QA：
+    {topic}
+
+    扩写时不得引入 Topic 外的新事实。
+
+  thinking_system: |
+    你负责为 QA 添加简洁 think 字段，并根据 think 重构答案。
+    think 和答案都必须围绕以下 Topic：
+    {topic}
+
+    如果没有必要生成 think，则 think 返回空字符串。
