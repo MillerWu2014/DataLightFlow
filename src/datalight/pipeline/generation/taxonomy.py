@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any
+from tqdm import tqdm
 
 from datalight.config import TaxonomyCategory, TaxonomySettings
 from datalight.llm import LLMClient
@@ -70,7 +71,11 @@ class ChunkTaxonomyTaggerOperator(Operator):
             system_prompt=_taxonomy_system_prompt(self.system_prompt, TAG_JSON_SUFFIX),
         )
         out: list[Record] = []
-        for row, response in zip(rows, responses):
+        for row, response in tqdm(
+            zip(rows, responses),
+            total=len(rows),
+            desc="Tagging taxonomy chunks",
+        ):
             item = dict(row)
             item["taxonomy_tags"] = self._parse_tags(response)
             out.append(item)
@@ -137,7 +142,11 @@ class TaxonomyQuestionGeneratorOperator(Operator):
         )
 
         out: list[Record] = []
-        for (row, tag), response in zip(jobs, responses):
+        for (row, tag), response in tqdm(
+            zip(jobs, responses),
+            total=len(jobs),
+            desc="Generating taxonomy questions",
+        ):
             question = _parse_question(response)
             if not question:
                 continue
@@ -194,7 +203,11 @@ class TaxonomyAnswerGeneratorOperator(Operator):
         )
 
         out: list[Record] = []
-        for row, response in zip(rows, responses):
+        for row, response in tqdm(
+            zip(rows, responses),
+            total=len(rows),
+            desc="Generating taxonomy answers",
+        ):
             answer = _parse_answer(response)
             if not answer:
                 continue

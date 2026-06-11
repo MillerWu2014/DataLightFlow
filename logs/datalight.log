@@ -227,3 +227,9 @@
 2026-06-11 18:13:28 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理/taxonomy, generator=taxonomy, question_num=5
 2026-06-11 18:13:28 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
 2026-06-11 18:15:02 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:95 - chunk[0] tags: 运行推理类/情景处置, 规则约束类/规则要求, 流程执行类/流程与步骤, 规则约束类/阈值与边界, 规则约束类/职责与权限, 规则约束类/条件与适用判定, 规则约束类/阈值与边界, 运行推理类/情景处置, 规则约束类/阈值与边界, 流程执行类/流程与步骤
+2026-06-11 18:31:06 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理/taxonomy, generator=taxonomy, question_num=5
+2026-06-11 18:31:06 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 4 chunks
+2026-06-11 18:35:55 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:94 - chunk[0] tags: 运行推理类/情景处置, 规则约束类/阈值与边界, 规则约束类/规则要求, 流程执行类/流程与步骤, 规则约束类/阈值与边界, 规则约束类/职责与权限
+2026-06-11 18:35:55 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:94 - chunk[1] tags: 规则约束类/规则要求, 运行推理类/情景处置, 规则约束类/规则要求, 规则约束类/职责与权限, 规则约束类/规则要求, 规则约束类/规则要求
+2026-06-11 18:35:55 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:94 - chunk[2] tags: 流程执行类/流程与步骤, 规则约束类/规则要求, 规则约束类/规则要求, 规则约束类/规则要求, 规则约束类/职责与权限, 流程执行类/流程与步骤, 规则约束类/规则要求
+2026-06-11 18:35:55 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:94 - chunk[3] tags: 规则约束类/规则要求, 规则约束类/阈值与边界, 规则约束类/条件与适用判定, 运行推理类/情景处置, 规则约束类/规则要求, 流程执行类/流程与步骤, 规则约束类/职责与权限
