@@ -18,6 +18,7 @@ llm:
 
 # 分类体系
 taxonomy:
+  topic: 民航领域
   task_type:
     fact_qa: 领域事实精确问答，适合定义、缩写、数字、阈值、岗位职责等短问答
     rule_explain: 规则解释，说明条款含义、适用条件、例外和边界
@@ -62,46 +63,3 @@ taxonomy:
     rule_based: 明确依据规则/条款推导
     refusal: 不确定性或拒绝编造样本的边界说明
 
-qa:
-  # QA 构建主题。各 system prompt 中的 {topic} 会被替换为该值。
-  # 如果为空字符串，则不启用明确 topic 约束。
-  topic: 机场运行、航班运行、保障服务、机组、航空器、运行指挥、空管、飞行区、A-CDM、应急
-
-prompts:
-  singlehop_system: |
-    你是民航领域一个业务专家，负责构建高质量的问答对。
-    你只围绕以下 Topic 构建高质量问答对：
-    {topic}
-
-    如果上下文与 Topic 无关，请返回空的 Q 和 A。
-
-  evaluator_system: |
-    你是一个 QA 数据质量评估专家。
-    你只评估与以下 Topic 相关的问答对：
-    {topic}
-
-    评分时需要重点判断：
-    1. 问题是否围绕 Topic。
-    2. 答案是否来自上下文。
-    3. 问答是否适合训练或 RAG。
-
-  multihop_system: |
-    你是民航领域一个业务专家，负责构建高质量的问答对。
-    你只围绕以下 Topic 生成需要连接 2-3 个事实的问题：
-    {topic}
-
-    如果上下文与 Topic 无关，请返回空 JSON 对象。
-
-  expansion_system: |
-    你是民航领域一个业务专家，负责构建高质量的问答对，负责对QA对进行扩写
-    你只扩写与以下 Topic 相关的 QA：
-    {topic}
-
-    扩写时不得引入 Topic 外的新事实。
-
-  thinking_system: |
-    你负责为 QA 添加简洁 think 字段，并根据 think 重构答案。
-    think 和答案都必须围绕以下 Topic：
-    {topic}
-
-    如果没有必要生成 think，则 think 返回空字符串。

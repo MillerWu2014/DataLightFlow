@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from tqdm import tqdm
 
 from datalight.llm import LLMClient
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.language import language_instruction, normalize_target_language
 from datalight.pipeline.models import QAThinkingPipelineResult
-from datalight.utils.json_payload import extract_json_payload
-from datalight.utils.jsonl import read_jsonl, write_jsonl
+from datalight.utils.json_parse import extract_json_payload
+from datalight.utils.jsonl import QA_CONTEXT_OMIT_KEYS, read_jsonl, write_jsonl
 
 
 class QAThinkOperator(Operator):
@@ -36,7 +37,11 @@ class QAThinkOperator(Operator):
             ),
         )
         out: list[Record] = []
-        for row, response in zip(rows, responses):
+        for row, response in tqdm(
+            zip(rows, responses),
+            total=len(rows),
+            desc="Adding think",
+        ):
             item = dict(row)
             question_key, answer_key = _final_qa_keys(item)
             original_answer = str(item.get(answer_key, ""))
@@ -80,7 +85,7 @@ def run_qa_thinking_pipeline(
         target_language=target_language,
         system_prompt=system_prompt,
     ).run(rows)
-    write_jsonl(output_path, thought)
+    write_jsonl(output_path, thought, omit_keys=QA_CONTEXT_OMIT_KEYS)
     return QAThinkingPipelineResult(input_path=input_path, output_path=output_path)
 
 

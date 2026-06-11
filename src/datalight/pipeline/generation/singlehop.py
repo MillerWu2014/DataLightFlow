@@ -1,17 +1,24 @@
 from __future__ import annotations
 
 import json
-from textwrap import dedent
+import re
 
 from tqdm import tqdm
 
 from datalight.llm import LLMClient
-from datalight.pipeline.core import Operator, Record
-from datalight.pipeline.language import language_instruction, normalize_target_language
-from datalight.utils.json_payload import extract_json_payload
+from datalight.pipeline.core import Operator, Record, limit_rows_per_chunk
+from datalight.pipeline.language import normalize_target_language
+from datalight.pipeline.prompts.text2qa import Text2QAAutoPromptTemplate, Text2QASeedPromptTemplate
+from datalight.utils.json_parse import clean_json_block, extract_json_payload, parse_json_value
 
 
 class Text2QAGeneratorOperator(Operator):
+    """Two-stage Text2QA generator ported from dataflow Text2QAGenerator.
+
+    Stage 1: generate dynamic extraction prompts per chunk.
+    Stage 2: use each prompt with the chunk text to extract Q:/A: pairs.
+    """
+
     def __init__(
         self,
         llm_client: LLMClient,
@@ -25,63 +32,96 @@ class Text2QAGeneratorOperator(Operator):
         self.question_num = question_num
         self.target_language = normalize_target_language(target_language)
         self.system_prompt = system_prompt
+        self._auto_prompt = Text2QAAutoPromptTemplate()
+        self._seed_prompt = Text2QASeedPromptTemplate()
 
     def run(self, rows: list[Record]) -> list[Record]:
-        prompts = [
-            self._build_prompt(row["chunk_text"], target_language=self.target_language)
-            for row in rows
-            for _ in range(self.question_num)
-        ]
-        responses = self.llm_client.generate(prompts, system_prompt=self.system_prompt)
-        expanded: list[Record] = []
-        response_index = 0
-        for row in tqdm(rows, desc="Generating QA pairs"):
-            for _ in range(self.question_num):
-                qa_pairs = parse_qa_response(responses[response_index])
-                response_index += 1
-                for question, answer in qa_pairs:
-                    item = dict(row)
-                    item["question"] = question
-                    item["answer"] = answer
-                    item["context"] = str(row.get("chunk_text", ""))
-                    item["hop_type"] = "singlehop"
-                    item["reasoning_steps"] = []
-                    item["supporting_facts"] = []
-                    item["qa_type"] = "singlehop"
-                    expanded.append(item)
-        return expanded
+        source_rows = [row for row in rows if str(row.get("chunk_text", "")).strip()]
+        if not source_rows:
+            return []
 
-    @staticmethod
-    def _build_prompt(chunk_text: str, *, target_language: str = "zh") -> str:
-        return dedent(f"""
-        请阅读文档内容，并根据其内容生成一对高质量的问答对(QA), 这些QA对将用于大模型SFT的微调，必须满足以下标准：
-                - **准确性**：答案必须严格依据原文，需要对问题描述清楚不得包含幻觉信息，将模糊指代转为具体实体名称。
-                - **专业性**：术语使用需符合民航领域的业务规范，避免口语化。
-                - **多样性**：涵盖事实问答、逻辑推理、规则、流程说明及异常处理等多种类型，不要针对图生成QA对。
-                - **格式规范**：采用标准的JSON格式存储，包含 instruction、input（可选）、output。
-                - **完备性**：QA 需覆盖文档核心知识点，避免遗漏关键参数或流程，包括关键参数（数值、阈值、时限）、完整流程（不省略中间步骤）、所有例外条款与特殊情形。
-                - **自解释性（Self-Explanatory）**：问题必须包含必要的实体定义，使其脱离原文上下文后仍可独立理解，严禁使用“该项目”、“上文提到的”等模糊代词。
-                - **原子性**：一个 QA 对只描述一个核心知识点，避免过于复杂的复合问题。如: 术语、单一流程、异常处理、单一指标、单一定义、单一规则等。
-                - **禁止引用**：问题中不能出现引用，如“根据xx规范”；答案中不得包含“如上图所示”、“根据表2”、“根据附图2-1”等对文档其他部分的引用。
-                - **写作规范**：答案直接陈述知识内容，禁止以"根据XX文件"、"依据XX规定"等引用句式开头。
-        语言要求: {language_instruction(target_language)}
-        请输出纯JSON格式，不要包含Markdown代码块标记（如 ```json ... ```）。
-        JSON 结构必须如下：
-        {{
-            "qa_pairs": [
-                {{
-                    "input": "问题内容...",
-                    "output": "答案内容..."
-                }},
-                ...
-            ]
-        }}
-        
-        文档内容：
-        <content>
-        {chunk_text}
-        </content>
-        """)
+        auto_prompts = [
+            self._auto_prompt.build_prompt(str(row["chunk_text"]), question_num=self.question_num)
+            for row in source_rows
+        ]
+        auto_responses = self.llm_client.generate(auto_prompts, system_prompt="")
+
+        jobs: list[tuple[Record, str]] = []
+        for row, response in zip(source_rows, auto_responses):
+            prompt_list = parse_generated_prompt_list(response)
+            for generated_prompt in prompt_list[: self.question_num]:
+                jobs.append((dict(row), generated_prompt))
+
+        if not jobs:
+            return []
+
+        seed_prompts = [
+            self._seed_prompt.build_prompt(generated_prompt, str(row["chunk_text"]))
+            for row, generated_prompt in jobs
+        ]
+        qa_responses = self.llm_client.generate(
+            seed_prompts,
+            system_prompt=self.system_prompt,
+        )
+
+        expanded: list[Record] = []
+        for (row, generated_prompt), response in tqdm(
+            zip(jobs, qa_responses),
+            total=len(jobs),
+            desc="Generating QA pairs",
+        ):
+            pairs = parse_qa_response(response)
+            if not pairs:
+                question, answer = _parse_qa_line_response(response)
+                if question and answer:
+                    pairs = [(question, answer)]
+            for question, answer in pairs:
+                item = dict(row)
+                item["question"] = question
+                item["answer"] = answer
+                item["generated_prompt"] = generated_prompt
+                item["context"] = str(row.get("chunk_text", ""))
+                item["hop_type"] = "singlehop"
+                item["reasoning_steps"] = []
+                item["supporting_facts"] = []
+                item["qa_type"] = "text2qa_meta"
+                expanded.append(item)
+        return limit_rows_per_chunk(expanded, max_per_chunk=self.question_num)
+
+
+def parse_generated_prompt_list(response: str) -> list[str]:
+    parsed = parse_json_value(response)
+    if isinstance(parsed, list):
+        prompts = [str(item).strip() for item in parsed if str(item).strip()]
+        if prompts:
+            return prompts
+
+    payload = clean_json_block(response)
+    try:
+        parsed = json.loads(payload)
+    except json.JSONDecodeError:
+        return _parse_prompt_list_fallback(payload)
+
+    if isinstance(parsed, list):
+        return [str(item).strip() for item in parsed if str(item).strip()]
+    return []
+
+
+def _parse_prompt_list_fallback(text: str) -> list[str]:
+    text = text.strip()
+    if not text.startswith("[") or not text.endswith("]"):
+        return []
+    inner = text[1:-1].strip()
+    if not inner:
+        return []
+    try:
+        parsed = json.loads(f"[{inner}]")
+    except json.JSONDecodeError:
+        return [item.strip().strip('"').strip("'") for item in inner.split(",") if item.strip()]
+    if isinstance(parsed, list):
+        return [str(item).strip() for item in parsed if str(item).strip()]
+    return []
+
 
 def parse_qa_response(response: str) -> list[tuple[str, str]]:
     pairs = _parse_qa_json_response(response)
@@ -129,9 +169,8 @@ def _parse_qa_line_response(response: str) -> tuple[str, str]:
     answer = ""
     for line in response.strip().splitlines():
         stripped = line.strip()
-        if stripped.lower().startswith("q:"):
-            question = stripped[2:].strip()
-        elif stripped.lower().startswith("a:"):
-            answer = stripped[2:].strip()
+        if re.match(r"^q:\s*", stripped, flags=re.IGNORECASE):
+            question = re.sub(r"^q:\s*", "", stripped, flags=re.IGNORECASE).strip()
+        elif re.match(r"^a:\s*", stripped, flags=re.IGNORECASE):
+            answer = re.sub(r"^a:\s*", "", stripped, flags=re.IGNORECASE).strip()
     return question, answer
-

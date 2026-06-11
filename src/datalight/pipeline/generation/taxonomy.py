@@ -7,7 +7,12 @@ from datalight.config import TaxonomyCategory, TaxonomySettings
 from datalight.llm import LLMClient
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.language import language_instruction, normalize_target_language
-from datalight.utils.json_payload import extract_json_payload
+from datalight.pipeline.prompts.taxonomy import (
+    TaxonomyAnswerPromptTemplate,
+    TaxonomyQuestionPromptTemplate,
+    TaxonomyTagPromptTemplate,
+)
+from datalight.utils.json_parse import extract_json_payload
 
 TAG_JSON_SUFFIX = "Return valid JSON only. Do not wrap the response in Markdown code fences."
 QUESTION_JSON_SUFFIX = "Return valid JSON only. Do not wrap the response in Markdown code fences."
@@ -49,6 +54,7 @@ class ChunkTaxonomyTaggerOperator(Operator):
         self.target_language = normalize_target_language(target_language)
         self.system_prompt = system_prompt
         self.catalog = build_taxonomy_catalog(taxonomy)
+        self._tag_prompt_template = TaxonomyTagPromptTemplate()
         self._category_lookup = {
             (category.level1_name, category.level2_name): category
             for category in taxonomy.categories
@@ -74,33 +80,11 @@ class ChunkTaxonomyTaggerOperator(Operator):
         if not chunk_text.strip():
             return '上下文为空，无法分类。请返回：{"tags":[]}'
 
-        return (
-            "你是民航领域文档分类专家。请阅读下方 Context，为其打上 taxonomy 标签，"
-            "供后续按标签生成 SFT 问答对。\n"
-            f"{language_instruction(self.target_language)}\n\n"
-            "分类维度：\n"
-            "1. level1_name / level2_name：Context 的知识点主题，必须从 catalog 中成对选取。\n"
-            "2. task_type：适合生成的问答任务类型。\n"
-            "3. reasoning_style：回答该主题时宜采用的推理风格。\n\n"
-            "标注规则：\n"
-            "- 仅当 Context 明确支持该分类时才打标签；不得使用 catalog 外的枚举值。\n"
-            "- 一个 Context 可返回多个 tag，分别对应不同知识点或任务类型；无实质内容时返回空列表。\n"
-            "- 目录、封面、页眉页脚、纯引用列表等片段返回 {\"tags\":[]}。\n"
-            "- “阈值与边界”仅在有明确数值、时限或边界条件时标注；“职责与权限”需有明确主体分工。\n"
-            "- 每个 tag 必须同时包含 level1_name、level2_name、task_type、reasoning_style。\n\n"
-            "请只返回如下 JSON，不要输出 Markdown 代码块：\n"
-            "{\n"
-            '  "tags": [\n'
-            "    {\n"
-            '      "level1_name": "...",\n'
-            '      "level2_name": "...",\n'
-            '      "task_type": "...",\n'
-            '      "reasoning_style": "..."\n'
-            "    }\n"
-            "  ]\n"
-            "}\n\n"
-            f"Taxonomy catalog:\n{self.catalog}\n\n"
-            f"Context:\n{chunk_text}"
+        return self._tag_prompt_template.build_prompt(
+            chunk_text=chunk_text,
+            catalog=self.catalog,
+            taxonomy=self.taxonomy,
+            language_line=language_instruction(self.target_language),
         )
 
     def _parse_tags(self, response: str) -> list[dict[str, str]]:
@@ -131,6 +115,7 @@ class TaxonomyQuestionGeneratorOperator(Operator):
         self.taxonomy = taxonomy
         self.target_language = normalize_target_language(target_language)
         self.system_prompt = system_prompt
+        self._question_prompt_template = TaxonomyQuestionPromptTemplate()
 
     def run(self, rows: list[Record]) -> list[Record]:
         jobs: list[tuple[Record, dict[str, str]]] = []
@@ -162,23 +147,18 @@ class TaxonomyQuestionGeneratorOperator(Operator):
         return out
 
     def _build_question_prompt(self, chunk_text: str, tag: dict[str, str]) -> str:
-        task_description = self.taxonomy.task_type.get(tag["task_type"], "")
-        reasoning_description = self.taxonomy.reasoning_style.get(tag["reasoning_style"], "")
-        return (
-            "根据标签，从 Context 生成 1 个事实性问题。\n"
-            f"{language_instruction(self.target_language)}\n\n"
-            "要求：\n"
-            "- 紧扣标签主题，且仅凭 Context 可回答。\n"
-            "- 问题自含主体，禁止“上文”、“该规范”、“该标准”等模糊指代。\n"
-            "- 一问一知识点；Context 不支持时返回 {\"question\":\"\"}。\n\n"
-            "标签：\n"
-            f"- 主题：{tag['level1_name']} / {tag['level2_name']}\n"
-            f"- 任务：{tag['task_type']}（{task_description}）\n"
-            f"- 推理：{tag['reasoning_style']}（{reasoning_description}）\n"
-            f"- 侧重：{tag.get('focus', '')}\n"
-            f"- 提示：{tag.get('prompt_hint', '')}\n\n"
-            '请只返回：{"question":"..."}\n\n'
-            f"Context:\n{chunk_text}"
+        return self._question_prompt_template.build_prompt(
+            chunk_text=chunk_text,
+            level1_name=tag["level1_name"],
+            level2_name=tag["level2_name"],
+            task_type=tag["task_type"],
+            task_description=self.taxonomy.task_type.get(tag["task_type"], ""),
+            reasoning_style=tag["reasoning_style"],
+            reasoning_description=self.taxonomy.reasoning_style.get(tag["reasoning_style"], ""),
+            focus=str(tag.get("focus", "")),
+            prompt_hint=str(tag.get("prompt_hint", "")),
+            taxonomy=self.taxonomy,
+            language_line=language_instruction(self.target_language),
         )
 
 
@@ -186,12 +166,15 @@ class TaxonomyAnswerGeneratorOperator(Operator):
     def __init__(
         self,
         llm_client: LLMClient,
+        taxonomy: TaxonomySettings,
         target_language: str = "zh",
         system_prompt: str = "",
     ):
         self.llm_client = llm_client
+        self.taxonomy = taxonomy
         self.target_language = normalize_target_language(target_language)
         self.system_prompt = system_prompt
+        self._answer_prompt_template = TaxonomyAnswerPromptTemplate()
 
     def run(self, rows: list[Record]) -> list[Record]:
         if not rows:
@@ -221,17 +204,15 @@ class TaxonomyAnswerGeneratorOperator(Operator):
         return out
 
     def _build_answer_prompt(self, chunk_text: str, question: str, row: Record) -> str:
-        return (
-            "Answer the question strictly based on the context.\n"
-            f"{language_instruction(self.target_language)}\n"
-            "Do not introduce facts outside the context.\n"
-            "If the context cannot support an answer, return {\"answer\":\"\"}.\n\n"
-            f"level1_name: {row.get('level1_name', '')}\n"
-            f"level2_name: {row.get('level2_name', '')}\n"
-            f"task_type: {row.get('task_type', '')}\n"
-            f"reasoning_style: {row.get('reasoning_style', '')}\n"
-            f"Question: {question}\n\n"
-            f"Context:\n{chunk_text}"
+        return self._answer_prompt_template.build_prompt(
+            chunk_text=chunk_text,
+            question=question,
+            level1_name=str(row.get("level1_name", "")),
+            level2_name=str(row.get("level2_name", "")),
+            task_type=str(row.get("task_type", "")),
+            reasoning_style=str(row.get("reasoning_style", "")),
+            taxonomy=self.taxonomy,
+            language_line=language_instruction(self.target_language),
         )
 
 

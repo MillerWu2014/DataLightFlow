@@ -12,12 +12,12 @@ from datalight.service import DatalightService
 
 
 MARKDOWN_PATH = Path(
-    "/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/data/markdown/标准规范/2023年航空器活动区驾驶手册/2023年航空器活动区驾驶手册.md",
+    "/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/data/markdown/标准规范/客舱运行管理/客舱运行管理.md",
 )
 CONFIG_PATH = Path(
     "/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/configs/datalight.yaml",
 )
-OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "manual_review"
+OUTPUT_ROOT = PROJECT_ROOT / "outputs"
 
 
 def _read_jsonl(path: Path) -> list[dict]:
@@ -43,18 +43,22 @@ def _print_file_stats(title: str, path: Path) -> None:
         print(f"  first_keys={sorted(first.keys())}")
 
 
-def run_singlehop(service: DatalightService, base_dir: Path) -> None:
+def run_singlehop(service: DatalightService, base_dir: Path, *, generator: str) -> None:
     output_dir = base_dir / "singlehop" / f"{MARKDOWN_PATH.stem}"
     output_dir.mkdir(parents=True, exist_ok=True)
     result = service.pipeline_markdown_qa(
         markdown=[MARKDOWN_PATH],
         output_dir=output_dir,
-        chunk_words=2048,
-        overlap_words=128,
+        chunk_words=640,
+        overlap_words=64,
         expand_qa=True,
         add_think=True,
+        question_num=5,
+        generator=generator,
+        atomic_max_per_task=10,
     )
-    print("\n[singlehop] generated artifacts")
+    print(f"\n[singlehop/{generator}] generated artifacts")
+    print(f"  output_dir={output_dir / generator}")
     _print_file_stats("generated", result.generated_path)
     _print_file_stats("scored", result.scored_path)
     if result.expanded_path is not None:
@@ -70,7 +74,7 @@ def run_multihop(service: DatalightService, base_dir: Path) -> None:
     result = service.pipeline_markdown_multihop_qa(
         markdown=[MARKDOWN_PATH],
         output_dir=output_dir,
-        chunk_words=2048,
+        chunk_words=512,
         overlap_words=128,
     )
     expanded_path = output_dir / "qa_multihop_expanded.jsonl"
@@ -95,15 +99,14 @@ def run_multihop(service: DatalightService, base_dir: Path) -> None:
 def main() -> None:
     _require_inputs()
     service = DatalightService(config=CONFIG_PATH)
-    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    base_dir = OUTPUT_ROOT / f"service_qa_{run_id}"
+    base_dir = OUTPUT_ROOT
     base_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"markdown={MARKDOWN_PATH}")
     print(f"config={CONFIG_PATH}")
     print(f"output_root={base_dir}")
     print("params: chunk_words=2048 overlap_words=128")
-    run_singlehop(service, base_dir)
+    run_singlehop(service, base_dir, generator="taxonomy")
     # run_multihop(service, base_dir)
     print("\nDone. Please manually review generated jsonl files.")
 

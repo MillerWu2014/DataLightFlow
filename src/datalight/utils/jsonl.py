@@ -6,6 +6,8 @@ from typing import Any
 
 from datalight.pipeline.core import Record
 
+QA_CONTEXT_OMIT_KEYS = frozenset({"chunk_text", "context"})
+
 
 def read_jsonl(path: Path) -> list[Record]:
     rows: list[Record] = []
@@ -17,8 +19,11 @@ def read_jsonl(path: Path) -> list[Record]:
     return rows
 
 
-def write_jsonl(path: Path, rows: list[Record]) -> None:
+def write_jsonl(path: Path, rows: list[Record], *, omit_keys: frozenset[str] | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         for row in rows:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+            payload = row
+            if omit_keys:
+                payload = {key: value for key, value in row.items() if key not in omit_keys}
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")

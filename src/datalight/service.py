@@ -7,6 +7,7 @@ from datalight.config import DatalightConfig, LLMSettings
 from datalight.ingest.runner import IngestConfig, ingest_dir, ingest_url
 from datalight.llm import OpenAICompatibleLLMClient, StaticLLMClient
 from datalight.pipeline.placeholder import echo_manifest_lines
+from datalight.pipeline.generation.agentic import run_depth_qa_pipeline, run_width_qa_pipeline
 from datalight.pipeline.generation.expansion import run_qa_expansion_pipeline
 from datalight.pipeline.generation.thinking import run_qa_thinking_pipeline
 from datalight.pipeline.runner import (
@@ -17,37 +18,58 @@ from datalight.version import __version__
 
 
 class DatalightService:
+    """DataLight 流水线统一入口，各方法委托至对应模块级函数。"""
+
     def __init__(self, config: Optional[Path] = None):
+        """绑定默认 `datalight.yaml` 路径，供未显式传 config 的调用回退使用。"""
         self.config = config
 
     def ingest_directory(self, **kwargs) -> Path:
+        """本地目录摄入：原始文件 → MinerU 转 Markdown → 写入 ingest manifest"""
         kwargs["config"] = kwargs.get("config") or self.config
         return ingest_directory(**kwargs)
 
     def ingest_url_to_markdown(self, **kwargs) -> Path:
+        """单 URL 摄入：下载资源 → MinerU 转 Markdown → 写入 ingest manifest"""
         kwargs["config"] = kwargs.get("config") or self.config
         return ingest_url_to_markdown(**kwargs)
 
     def pipeline_noop(self, **kwargs) -> Path:
+        """占位流水线：manifest 逐行回显到 export，用于 I/O 接线自检（无 LLM）"""
         return pipeline_noop(**kwargs)
 
     def pipeline_markdown_qa(self, **kwargs):
+        """单跳 QA 主链路：Markdown → 切块 → 生成（default/atomic/taxonomy）→ 评分过滤 → 可选扩写/think → Alpaca 导出"""
         kwargs["config"] = kwargs.get("config") or self.config
         return pipeline_markdown_qa(**kwargs)
 
     def pipeline_markdown_multihop_qa(self, **kwargs):
+        """多跳 QA 链路：Markdown → 语义切块 → 滑动窗口上下文 → 多跳 QA 生成 → 导出"""
         kwargs["config"] = kwargs.get("config") or self.config
         return pipeline_markdown_multihop_qa(**kwargs)
 
     def pipeline_expand_qa(self, **kwargs):
+        """QA 后处理扩写：已有 QA JSONL → LLM 扩写变体 → 输出 enriched QA JSONL"""
         kwargs["config"] = kwargs.get("config") or self.config
         return pipeline_expand_qa(**kwargs)
 
     def pipeline_add_think(self, **kwargs):
+        """QA 后处理推理：已有 QA JSONL → 生成 think 字段并重写 answer → 输出带推理链的 JSONL"""
         kwargs["config"] = kwargs.get("config") or self.config
         return pipeline_add_think(**kwargs)
 
+    def pipeline_depth_qa(self, **kwargs):
+        """Agentic Depth 链路：单跳 QA JSONL → 多轮深挖验证 → 输出更深层的 QA JSONL"""
+        kwargs["config"] = kwargs.get("config") or self.config
+        return pipeline_depth_qa(**kwargs)
+
+    def pipeline_width_qa(self, **kwargs):
+        """Agentic Width 链路：单跳 QA JSONL → 横向扩展与合并验证 → 输出更广覆盖的 QA JSONL"""
+        kwargs["config"] = kwargs.get("config") or self.config
+        return pipeline_width_qa(**kwargs)
+
     def version(self) -> str:
+        """返回 DataLight 包版本号"""
         return version()
 
 
@@ -176,11 +198,19 @@ def pipeline_markdown_qa(
     expand_qa: bool = False,
     expand_mode: str = "detail",
     add_think: bool = False,
+    generator: str = "default",
+    atomic_max_per_task: int = 10,
 ):
     """Run the single-hop markdown QA pipeline.
 
     Pipeline stages: chunking -> QA generation -> scoring/filtering ->
     optional expansion -> optional think augmentation -> Alpaca export.
+
+    `generator` options:
+    - `default`: two-stage Text2QA meta-prompt generation (AutoPrompt -> Q:/A:)
+    - `atomic`: AgenticRAG atomic task pipeline (high-quality verified QA;
+      skips the four-dimension evaluator to avoid duplicate LLM calls)
+    - `taxonomy`: taxonomy tag -> question -> answer
 
     LLM source options:
     1) `responses_file` for deterministic static responses.
@@ -190,8 +220,10 @@ def pipeline_markdown_qa(
 
     Args:
         markdown: Markdown file paths to process.
-        output_dir: Output directory for all generated artifacts.
-            If not provided, falls back to `output.qa_dir()` in config.
+        output_dir: Base output directory for generated artifacts.
+            Actual files are written to ``output_dir / generator`` so runs with
+            different generators do not overwrite each other.
+            If not provided, falls back to ``output.qa_dir()`` in config.
         config: Optional config file path (`datalight.yaml`).
         responses_file: Optional static responses file (split by `---`).
         lmstudio: Whether to use online LLM mode instead of static responses.
@@ -199,12 +231,15 @@ def pipeline_markdown_qa(
         llm_timeout: Optional LLM timeout override in seconds.
         chunk_words: Max words per chunk.
         overlap_words: Overlap words between adjacent chunks.
-        question_num: Number of QA pairs generated per chunk.
+        question_num: Max QA pairs to keep per chunk (applies to default, atomic,
+            and taxonomy generators).
         min_score: Unified threshold for all QA quality score dimensions.
         language: Target language (e.g. `zh`, `en`).
         expand_qa: Whether to run expansion stage.
         expand_mode: Expansion mode (`detail` / other supported modes).
         add_think: Whether to run think augmentation stage.
+        generator: QA generator mode (`default`, `atomic`, `taxonomy`).
+        atomic_max_per_task: Max conclusion candidates per chunk for atomic mode.
 
     Returns:
         `MarkdownQAPipelineResult` containing paths for intermediate/final
@@ -218,7 +253,8 @@ def pipeline_markdown_qa(
         raise ValueError("markdown must not be empty")
     _ensure_files(markdown, "markdown")
     app_cfg = _load_config(config)
-    resolved_output_dir = _required_path(output_dir, app_cfg.output.qa_dir(), "output_dir")
+    base_output_dir = _required_path(output_dir, app_cfg.output.qa_dir(), "output_dir")
+    resolved_output_dir = base_output_dir / generator
     llm_client = _build_qa_llm_client(
         responses_file=responses_file,
         lmstudio=lmstudio,
@@ -241,8 +277,9 @@ def pipeline_markdown_qa(
         expand_qa=expand_qa,
         expand_mode=expand_mode,
         add_think=add_think,
-        prompt_config=app_cfg.prompt_config(),
         taxonomy=app_cfg.taxonomy_data(),
+        generator=generator,
+        atomic_max_per_task=atomic_max_per_task,
     )
 
 
@@ -258,12 +295,13 @@ def pipeline_markdown_multihop_qa(
     chunk_words: int = 800,
     overlap_words: int = 0,
     min_context_sentences: int = 3,
+    num_q: int = 5,
     language: str = "zh",
 ):
     """Run the multi-hop markdown QA pipeline.
 
-    Pipeline stages: chunking -> multi-hop context construction -> multi-hop QA
-    generation -> Alpaca export.
+    Pipeline stages: semantic chunking -> info-pair context extraction (original
+    DataFlow sliding window) -> multi-hop QA generation -> Alpaca export.
 
     Notes:
     - This function only runs multi-hop generation/export.
@@ -279,10 +317,12 @@ def pipeline_markdown_multihop_qa(
         lmstudio: Whether to use online LLM mode instead of static responses.
         llm_model: Optional LLM model override.
         llm_timeout: Optional LLM timeout override in seconds.
-        chunk_words: Max words per chunk.
-        overlap_words: Overlap words between adjacent chunks.
-        min_context_sentences: Minimum sentence count used to build each
-            multi-hop context.
+        chunk_words: Approximate chunk size budget; mapped to
+            ``max_chunk_chars = chunk_words * 4`` for semantic chunking.
+        overlap_words: Ignored for multi-hop semantic chunking.
+        min_context_sentences: Minimum sentence count required before extracting
+            multi-hop info pairs from a chunk.
+        num_q: Maximum multi-hop QA pairs to keep per source chunk.
         language: Target language (e.g. `zh`, `en`).
 
     Returns:
@@ -312,8 +352,8 @@ def pipeline_markdown_multihop_qa(
         chunk_words=chunk_words,
         overlap_words=overlap_words,
         min_context_sentences=min_context_sentences,
+        num_q=num_q,
         target_language=language,
-        prompt_config=app_cfg.prompt_config(),
     )
 
 
@@ -366,7 +406,7 @@ def pipeline_expand_qa(
         llm_client=llm_client,
         mode=mode,
         target_language=language,
-        system_prompt=app_cfg.prompt_config().render("expansion", ""),
+        system_prompt=None,
     )
 
 
@@ -416,7 +456,63 @@ def pipeline_add_think(
         output_path=resolved_output_path,
         llm_client=llm_client,
         target_language=language,
-        system_prompt=app_cfg.prompt_config().render("thinking", ""),
+        system_prompt=None,
+    )
+
+
+def pipeline_depth_qa(
+    *,
+    input_path: Path,
+    output_path: Path,
+    config: Optional[Path] = None,
+    responses_file: Optional[Path] = None,
+    lmstudio: bool = False,
+    llm_model: Optional[str] = None,
+    llm_timeout: Optional[int] = None,
+    n_rounds: int = 2,
+):
+    """Run AgenticRAG depth QA generation on existing single-hop QA records."""
+    _ensure_file(input_path, "input_path")
+    app_cfg = _load_config(config)
+    llm_client = _build_qa_llm_client(
+        responses_file=responses_file,
+        lmstudio=lmstudio,
+        llm_model=llm_model,
+        llm_timeout=llm_timeout,
+        llm_config=app_cfg.llm,
+    )
+    return run_depth_qa_pipeline(
+        input_path=input_path,
+        output_path=output_path,
+        llm_client=llm_client,
+        n_rounds=n_rounds,
+    )
+
+
+def pipeline_width_qa(
+    *,
+    input_path: Path,
+    output_path: Path,
+    config: Optional[Path] = None,
+    responses_file: Optional[Path] = None,
+    lmstudio: bool = False,
+    llm_model: Optional[str] = None,
+    llm_timeout: Optional[int] = None,
+):
+    """Run AgenticRAG width QA generation on existing single-hop QA records."""
+    _ensure_file(input_path, "input_path")
+    app_cfg = _load_config(config)
+    llm_client = _build_qa_llm_client(
+        responses_file=responses_file,
+        lmstudio=lmstudio,
+        llm_model=llm_model,
+        llm_timeout=llm_timeout,
+        llm_config=app_cfg.llm,
+    )
+    return run_width_qa_pipeline(
+        input_path=input_path,
+        output_path=output_path,
+        llm_client=llm_client,
     )
 
 
@@ -486,7 +582,3 @@ def _ensure_files(paths: list[Path], name: str) -> None:
 
 def version() -> str:
     return __version__
-
-
-def run() -> None:
-    raise RuntimeError("CLI mode has been removed. Import and call functions in datalight.service directly.")

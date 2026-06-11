@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from tqdm import tqdm
 
 from datalight.llm import LLMClient
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.language import language_instruction, normalize_target_language
 from datalight.pipeline.models import QAExpansionPipelineResult
-from datalight.utils.json_payload import extract_json_payload
-from datalight.utils.jsonl import read_jsonl, write_jsonl
+from datalight.utils.json_parse import extract_json_payload
+from datalight.utils.jsonl import QA_CONTEXT_OMIT_KEYS, read_jsonl, write_jsonl
 
 EXPANSION_MODES = {"detail", "contextual", "reasoning"}
 
@@ -45,7 +46,11 @@ class QAExpansionOperator(Operator):
             ),
         )
         out: list[Record] = []
-        for row, response in zip(rows, responses):
+        for row, response in tqdm(
+            zip(rows, responses),
+            total=len(rows),
+            desc="Expanding QA pairs",
+        ):
             item = dict(row)
             try:
                 expansion = parse_expansion_response(response)
@@ -80,7 +85,7 @@ def run_qa_expansion_pipeline(
         target_language=target_language,
         system_prompt=system_prompt,
     ).run(rows)
-    write_jsonl(output_path, expanded)
+    write_jsonl(output_path, expanded, omit_keys=QA_CONTEXT_OMIT_KEYS)
     return QAExpansionPipelineResult(input_path=input_path, output_path=output_path)
 
 

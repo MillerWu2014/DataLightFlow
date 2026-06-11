@@ -33,11 +33,6 @@ class OutputSettings:
 
 
 @dataclass
-class QASettings:
-    topic: str = ""
-
-
-@dataclass
 class LLMSettings:
     provider: str | None = None
     base_url: str | None = None
@@ -57,11 +52,19 @@ class TaxonomyCategory:
     prompt_hint: str
 
 
+DEFAULT_TAXONOMY_TOPIC = "民航领域"
+
+
 @dataclass
 class TaxonomySettings:
+    topic: str = DEFAULT_TAXONOMY_TOPIC
     task_type: dict[str, str] = field(default_factory=dict)
     categories: list[TaxonomyCategory] = field(default_factory=list)
     reasoning_style: dict[str, str] = field(default_factory=dict)
+
+    def resolved_topic(self) -> str:
+        text = self.topic.strip()
+        return text or DEFAULT_TAXONOMY_TOPIC
 
     def is_complete(self) -> bool:
         if not self.task_type or not self.reasoning_style or not self.categories:
@@ -76,27 +79,10 @@ class TaxonomySettings:
 
 
 @dataclass
-class PromptConfig:
-    topic: str = ""
-    singlehop_system: str | None = None
-    evaluator_system: str | None = None
-    multihop_system: str | None = None
-    expansion_system: str | None = None
-    thinking_system: str | None = None
-
-    def render(self, stage: str, default: str) -> str:
-        template = getattr(self, f"{stage}_system")
-        text = template if template is not None else default
-        return text.format(topic=self.topic)
-
-
-@dataclass
 class DatalightConfig:
     mineru: MineruSettings = field(default_factory=MineruSettings)
     output: OutputSettings = field(default_factory=OutputSettings)
     llm: LLMSettings = field(default_factory=LLMSettings)
-    qa: QASettings = field(default_factory=QASettings)
-    prompts: PromptConfig = field(default_factory=PromptConfig)
     taxonomy: TaxonomySettings = field(default_factory=TaxonomySettings)
 
     @classmethod
@@ -111,10 +97,6 @@ class DatalightConfig:
         mineru_data = _dict_value(data, "mineru")
         output_data = _dict_value(data, "output")
         llm_data = _dict_value(data, "llm")
-        qa_data = _dict_value(data, "qa")
-        prompts_data = _dict_value(data, "prompts")
-
-        topic = str(qa_data.get("topic") or "")
 
         return cls(
             mineru=MineruSettings(
@@ -130,21 +112,8 @@ class DatalightConfig:
                 timeout_sec=_optional_int(llm_data.get("timeout_sec")),
                 temperature=_optional_float(llm_data.get("temperature")),
             ),
-            qa=QASettings(topic=topic),
-            prompts=PromptConfig(
-                topic=topic,
-                singlehop_system=_optional_str(prompts_data.get("singlehop_system")),
-                evaluator_system=_optional_str(prompts_data.get("evaluator_system")),
-                multihop_system=_optional_str(prompts_data.get("multihop_system")),
-                expansion_system=_optional_str(prompts_data.get("expansion_system")),
-                thinking_system=_optional_str(prompts_data.get("thinking_system")),
-            ),
             taxonomy=parse_taxonomy(data),
         )
-
-    def prompt_config(self) -> PromptConfig:
-        self.prompts.topic = self.qa.topic
-        return self.prompts
 
     def taxonomy_data(self) -> TaxonomySettings:
         return self.taxonomy
@@ -167,6 +136,8 @@ def parse_taxonomy(data: dict[str, Any]) -> TaxonomySettings:
         raise ValueError("Config field 'taxonomy' must be a mapping")
 
     return TaxonomySettings(
+        topic=str(taxonomy_data.get("topic") or DEFAULT_TAXONOMY_TOPIC).strip()
+        or DEFAULT_TAXONOMY_TOPIC,
         task_type=_parse_str_mapping(taxonomy_data.get("task_type"), "taxonomy.task_type"),
         categories=_parse_taxonomy_categories(taxonomy_data.get("level1_name")),
         reasoning_style=_parse_str_mapping(

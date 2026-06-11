@@ -2,14 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from datalight.config import PromptConfig, TaxonomySettings
+from datalight.config import TaxonomySettings
 from datalight.log import get_logger
 from datalight.llm import LLMClient
-from datalight.pipeline.core import Pipeline
+from datalight.pipeline.core import Pipeline, limit_rows_per_chunk
 from datalight.pipeline.evaluation import Text2QAEvaluatorOperator
 from datalight.pipeline.export import AlpacaExportOperator, MultiHopAlpacaExportOperator
 from datalight.pipeline.filtering import QAFilterOperator
 from datalight.pipeline.generation import (
+    AtomicTaskQAGeneratorOperator,
     ChunkTaxonomyTaggerOperator,
     MultiHopQAGeneratorOperator,
     QAExpansionOperator,
@@ -19,8 +20,12 @@ from datalight.pipeline.generation import (
     Text2QAGeneratorOperator,
 )
 from datalight.pipeline.models import MarkdownMultiHopQAPipelineResult, MarkdownQAPipelineResult
-from datalight.pipeline.preprocess import MarkdownChunkOperator, MultiHopContextBuilderOperator
-from datalight.utils.jsonl import write_jsonl
+from datalight.pipeline.preprocess import (
+    MarkdownChunkOperator,
+    MarkdownSemanticChunkOperator,
+    MultiHopContextBuilderOperator,
+)
+from datalight.utils.jsonl import QA_CONTEXT_OMIT_KEYS, write_jsonl
 
 logger = get_logger("pipeline.runner")
 
@@ -41,16 +46,24 @@ def run_markdown_qa_pipeline(
     expand_qa: bool = False,
     expand_mode: str = "detail",
     add_think: bool = False,
-    prompt_config: PromptConfig | None = None,
     taxonomy: TaxonomySettings | None = None,
+    generator: str = "default",
+    atomic_max_per_task: int = 10,
 ) -> MarkdownQAPipelineResult:
     output_dir.mkdir(parents=True, exist_ok=True)
-    use_taxonomy = taxonomy is not None and taxonomy.is_complete()
+    if generator not in {"default", "atomic", "taxonomy"}:
+        raise ValueError("generator must be one of: default, atomic, taxonomy")
+        
+    use_taxonomy = generator == "taxonomy" and taxonomy is not None and taxonomy.is_complete()
+    use_atomic = generator == "atomic"
+    if generator == "taxonomy" and not use_taxonomy:
+        raise ValueError("generator='taxonomy' requires a complete taxonomy config")
     logger.info(
-        "单跳 QA 开始: files=%s, output=%s, taxonomy=%s",
+        "单跳 QA 开始: files=%s, output=%s, generator=%s, question_num=%s",
         [path.name for path in markdown_paths],
         output_dir,
-        use_taxonomy,
+        generator,
+        question_num,
     )
     rows = [
         {"source_path": str(path), "output_md_path": str(path), "status": "ok"}
@@ -62,15 +75,13 @@ def run_markdown_qa_pipeline(
     write_jsonl(chunks_path, chunks)
     logger.info("切块完成: %s chunks", len(chunks))
 
-    singlehop_system_prompt = prompt_config.render("singlehop", "") if prompt_config else ""
     if use_taxonomy:
         tagged = ChunkTaxonomyTaggerOperator(
             llm_client=llm_client,
             taxonomy=taxonomy,
             target_language=target_language,
-            system_prompt=singlehop_system_prompt,
+            system_prompt="",
         ).run(chunks)
-        write_jsonl(output_dir / "chunks_tagged.jsonl", tagged)
         for row in tagged:
             tags = row.get("taxonomy_tags", [])
             if not isinstance(tags, list):
@@ -86,41 +97,55 @@ def run_markdown_qa_pipeline(
             llm_client=llm_client,
             taxonomy=taxonomy,
             target_language=target_language,
-            system_prompt=singlehop_system_prompt,
+            system_prompt="",
         ).run(tagged)
-        write_jsonl(output_dir / "qa_questions.jsonl", questions)
 
         generated = TaxonomyAnswerGeneratorOperator(
             llm_client=llm_client,
+            taxonomy=taxonomy,
             target_language=target_language,
-            system_prompt=singlehop_system_prompt,
+            system_prompt="",
         ).run(questions)
+        generated = limit_rows_per_chunk(generated, max_per_chunk=question_num)
+    elif use_atomic:
+        generated = AtomicTaskQAGeneratorOperator(
+            llm_client=llm_client,
+            max_per_task=atomic_max_per_task,
+            max_question=question_num,
+        ).run(chunks)
     else:
         generated = Text2QAGeneratorOperator(
             llm_client=llm_client,
             question_num=question_num,
             target_language=target_language,
-            system_prompt=singlehop_system_prompt,
+            system_prompt="",
         ).run(chunks)
     logger.info("生成QA对完成: %s QA对", len(generated))
 
     generated_path = output_dir / "qa_generated.jsonl"
     write_jsonl(generated_path, generated)
 
-    scored = Text2QAEvaluatorOperator(
-        llm_client=llm_client,
-        target_language=target_language,
-        system_prompt=prompt_config.render("evaluator", "") if prompt_config else "",
-    ).run(generated)
     scored_path = output_dir / "qa_scored.jsonl"
-    write_jsonl(scored_path, scored)
+    if use_atomic:
+        # Atomic generator already runs recall + golden-doc verification.
+        scored = generated
+        filtered = generated
+        write_jsonl(scored_path, scored, omit_keys=QA_CONTEXT_OMIT_KEYS)
+        logger.info("Atomic 模式跳过四维评估: %s QA对", len(filtered))
+    else:
+        scored = Text2QAEvaluatorOperator(
+            llm_client=llm_client,
+            target_language=target_language,
+            system_prompt="",
+        ).run(generated)
+        write_jsonl(scored_path, scored, omit_keys=QA_CONTEXT_OMIT_KEYS)
 
-    filtered = QAFilterOperator(
-        min_question_quality=min_question_quality,
-        min_answer_alignment=min_answer_alignment,
-        min_answer_verifiability=min_answer_verifiability,
-        min_downstream_value=min_downstream_value,
-    ).run(scored)
+        filtered = QAFilterOperator(
+            min_question_quality=min_question_quality,
+            min_answer_alignment=min_answer_alignment,
+            min_answer_verifiability=min_answer_verifiability,
+            min_downstream_value=min_downstream_value,
+        ).run(scored)
 
     expanded_path: Path | None = None
     rows_to_export = filtered
@@ -129,10 +154,10 @@ def run_markdown_qa_pipeline(
             llm_client=llm_client,
             mode=expand_mode,
             target_language=target_language,
-            system_prompt=prompt_config.render("expansion", "") if prompt_config else None,
+            system_prompt=None,
         ).run(filtered)
         expanded_path = output_dir / "qa_expanded.jsonl"
-        write_jsonl(expanded_path, rows_to_export)
+        write_jsonl(expanded_path, rows_to_export, omit_keys=QA_CONTEXT_OMIT_KEYS)
         logger.info("扩写完成: %s QA对", len(rows_to_export))
 
     think_path: Path | None = None
@@ -140,10 +165,10 @@ def run_markdown_qa_pipeline(
         rows_to_export = QAThinkOperator(
             llm_client=llm_client,
             target_language=target_language,
-            system_prompt=prompt_config.render("thinking", "") if prompt_config else None,
+            system_prompt=None,
         ).run(rows_to_export)
         think_path = output_dir / "qa_with_think.jsonl"
-        write_jsonl(think_path, rows_to_export)
+        write_jsonl(think_path, rows_to_export, omit_keys=QA_CONTEXT_OMIT_KEYS)
         logger.info("补充think完成: %s QA对", len(rows_to_export))
 
     export_path = output_dir / "qa_export.jsonl"
@@ -178,8 +203,8 @@ def run_markdown_multihop_qa_pipeline(
     chunk_words: int = 800,
     overlap_words: int = 0,
     min_context_sentences: int = 3,
+    num_q: int = 5,
     target_language: str = "zh",
-    prompt_config: PromptConfig | None = None,
 ) -> MarkdownMultiHopQAPipelineResult:
     output_dir.mkdir(parents=True, exist_ok=True)
     logger.info(
@@ -192,19 +217,30 @@ def run_markdown_multihop_qa_pipeline(
         for path in markdown_paths
     ]
 
-    chunks = MarkdownChunkOperator(chunk_words=chunk_words, overlap_words=overlap_words).run(rows)
+    max_chunk_chars = chunk_words * 4
+    chunks = MarkdownSemanticChunkOperator(
+        max_chunk_chars=max_chunk_chars,
+    ).run(rows)
     chunks_path = output_dir / "chunks.jsonl"
     write_jsonl(chunks_path, chunks)
-    logger.info("切块完成: %s chunks", len(chunks))
+    logger.info(
+        "语义切块完成: %s chunks (max_chunk_chars=%s, overlap ignored)",
+        len(chunks),
+        max_chunk_chars,
+    )
 
-    contexts = MultiHopContextBuilderOperator(min_context_sentences=min_context_sentences).run(chunks)
+    contexts = MultiHopContextBuilderOperator(
+        lang=target_language,
+        min_context_sentences=min_context_sentences,
+    ).run(chunks)
     contexts_path = output_dir / "multihop_contexts.jsonl"
     write_jsonl(contexts_path, contexts)
 
     generated = MultiHopQAGeneratorOperator(
         llm_client=llm_client,
         target_language=target_language,
-        system_prompt=prompt_config.render("multihop", "") if prompt_config else None,
+        system_prompt=None,
+        num_q=num_q,
     ).run(contexts)
     generated_path = output_dir / "qa_multihop_generated.jsonl"
     write_jsonl(generated_path, generated)

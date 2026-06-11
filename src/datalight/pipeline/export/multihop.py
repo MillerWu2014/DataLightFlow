@@ -27,6 +27,7 @@ class MultiHopAlpacaExportOperator(Operator):
                         "reasoning_steps": row.get("reasoning_steps", []),
                         "supporting_facts": row.get("supporting_facts", []),
                         "type": row.get("qa_type", ""),
+                        "complexity": row.get("complexity", 0),
                     },
                 }
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")

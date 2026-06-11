@@ -57,6 +57,16 @@ class QAThinkingPipelineResult:
     output_path: Path
 
 
+@dataclass
+class AgenticQAPipelineResult:
+    """Agentic depth/width 流水线输入/输出路径"""
+
+    input_path: Path
+    output_path: Path
+    qa_type: Literal["depth", "width"]
+    count: int
+
+
 # QA 跳数类型：单跳 / 多跳
 HopType = Literal["singlehop", "multihop"]
 

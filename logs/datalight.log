@@ -2,3 +2,228 @@
 2026-06-10 17:43:28 | WARNING  | datalight.pipeline.qa:<string>:<module>:10 - child logger test
 2026-06-10 18:51:01 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:49 - 单跳 QA 开始: files=['2023年航空器活动区驾驶手册.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/manual_review/service_qa_20260610_185101/singlehop/2023年航空器活动区驾驶手册, taxonomy=True
 2026-06-10 18:51:01 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:63 - 切块完成: 4 chunks
+2026-06-11 14:08:45 | INFO     | datalight.pipeline.agentic:agentic.py:run:50 - Depth QA round 1/1: rows=1
+2026-06-11 14:08:48 | INFO     | datalight.pipeline.agentic:agentic.py:run:50 - Depth QA round 1/1: rows=1
+2026-06-11 14:11:19 | INFO     | datalight.pipeline.agentic:agentic.py:run:50 - Depth QA round 1/1: rows=1
+2026-06-11 14:28:51 | INFO     | datalight.pipeline.atomic:atomic.py:run:66 - Atomic QA: get identifier for 1 chunks
+2026-06-11 14:28:51 | INFO     | datalight.pipeline.agentic:agentic.py:run:50 - Depth QA round 1/1: rows=1
+2026-06-11 14:28:55 | INFO     | datalight.pipeline.atomic:atomic.py:run:66 - Atomic QA: get identifier for 1 chunks
+2026-06-11 14:28:55 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-11 14:28:55 | INFO     | datalight.pipeline.atomic:atomic.py:run:91 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 14:28:55 | INFO     | datalight.pipeline.atomic:atomic.py:run:101 - Atomic QA: clean 1 QA pairs
+2026-06-11 14:28:55 | INFO     | datalight.pipeline.atomic:atomic.py:run:114 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 14:28:55 | INFO     | datalight.pipeline.atomic:atomic.py:run:126 - Atomic QA: generate optional answers
+2026-06-11 14:37:01 | INFO     | datalight.pipeline.agentic:agentic.py:run:50 - Depth QA round 1/1: rows=1
+2026-06-11 14:56:37 | INFO     | datalight.pipeline.atomic:atomic.py:run:66 - Atomic QA: get identifier for 1 chunks
+2026-06-11 14:56:37 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-11 14:56:37 | INFO     | datalight.pipeline.atomic:atomic.py:run:91 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 14:56:37 | INFO     | datalight.pipeline.atomic:atomic.py:run:101 - Atomic QA: clean 1 QA pairs
+2026-06-11 14:56:37 | INFO     | datalight.pipeline.atomic:atomic.py:run:114 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 14:56:37 | INFO     | datalight.pipeline.atomic:atomic.py:run:126 - Atomic QA: generate optional answers
+2026-06-11 14:56:37 | INFO     | datalight.pipeline.agentic:agentic.py:run:50 - Depth QA round 1/1: rows=1
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:62 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmp59livq3u/out, generator=atomic
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 1 QA对
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:135 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 15:41:27 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 15:47:00 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 15:50:05 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:62 - 单跳 QA 开始: files=['2023年航空器活动区驾驶手册.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/service_qa_20260611_155005/singlehop/2023年航空器活动区驾驶手册, generator=default
+2026-06-11 15:50:05 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 4 chunks
+2026-06-11 15:58:23 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 4 QA对
+2026-06-11 16:10:42 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:162 - 扩写完成: 4 QA对
+2026-06-11 16:13:09 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:173 - 补充think完成: 4 QA对
+2026-06-11 16:13:09 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=4, generated=4, filtered=4, export=4
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:64 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmp9l3xnjxd/out, generator=atomic
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:78 - 切块完成: 1 chunks
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:126 - 生成QA对完成: 1 QA对
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:137 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:183 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 16:14:30 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:62 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmpq86chn75/out, generator=atomic
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 1 QA对
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:135 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 16:20:00 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmp4f7hnu_8/out, generator=atomic, question_num=3
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:125 - 生成QA对完成: 1 QA对
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:136 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:182 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 16:26:15 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:60 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmpt2omd4pi/out, generator=atomic, question_num=3
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:75 - 切块完成: 1 chunks
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 1 QA对
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:134 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:64 - Atomic QA: get identifier for 1 chunks
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:71 - Atomic QA: extract conclusions
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:89 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:99 - Atomic QA: clean 1 QA pairs
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:112 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 16:56:54 | INFO     | datalight.pipeline.atomic:atomic.py:run:124 - Atomic QA: generate optional answers
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:60 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmp_qlznfcv/out, generator=atomic, question_num=3
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:75 - 切块完成: 1 chunks
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:66 - Atomic QA: get identifier for 1 chunks
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:74 - Atomic QA: extract conclusions
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:93 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:103 - Atomic QA: clean 1 QA pairs
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:116 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:128 - Atomic QA: generate optional answers
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 1 QA对
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:134 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:66 - Atomic QA: get identifier for 1 chunks
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:74 - Atomic QA: extract conclusions
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:93 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:103 - Atomic QA: clean 1 QA pairs
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:116 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 17:04:41 | INFO     | datalight.pipeline.atomic:atomic.py:run:128 - Atomic QA: generate optional answers
+2026-06-11 17:09:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:60 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理, generator=taxonomy, question_num=5
+2026-06-11 17:09:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:75 - 切块完成: 0 chunks
+2026-06-11 17:09:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-11 17:09:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:161 - 扩写完成: 0 QA对
+2026-06-11 17:09:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:172 - 补充think完成: 0 QA对
+2026-06-11 17:09:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=0, generated=0, filtered=0, export=0
+2026-06-11 17:12:10 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:60 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理, generator=taxonomy, question_num=5
+2026-06-11 17:12:10 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:75 - 切块完成: 0 chunks
+2026-06-11 17:12:10 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-11 17:12:10 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:161 - 扩写完成: 0 QA对
+2026-06-11 17:12:10 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:172 - 补充think完成: 0 QA对
+2026-06-11 17:12:10 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=0, generated=0, filtered=0, export=0
+2026-06-11 17:18:53 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理, generator=taxonomy, question_num=5
+2026-06-11 17:18:53 | WARNING  | datalight:chunking.py:run:44 - Skipping, found TOC in chunk index: 0
+2026-06-11 17:18:53 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 0 chunks
+2026-06-11 17:18:53 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 0 QA对
+2026-06-11 17:18:53 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:162 - 扩写完成: 0 QA对
+2026-06-11 17:18:53 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:173 - 补充think完成: 0 QA对
+2026-06-11 17:18:53 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=0, generated=0, filtered=0, export=0
+2026-06-11 17:19:49 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理, generator=taxonomy, question_num=5
+2026-06-11 17:19:49 | WARNING  | datalight:chunking.py:run:44 - Skipping, found TOC in chunk index: 0; chunk size: 37051
+2026-06-11 17:19:49 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 0 chunks
+2026-06-11 17:19:49 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 0 QA对
+2026-06-11 17:19:49 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:162 - 扩写完成: 0 QA对
+2026-06-11 17:19:49 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:173 - 补充think完成: 0 QA对
+2026-06-11 17:19:49 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=0, generated=0, filtered=0, export=0
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmpzz_ak_pb/out, generator=atomic, question_num=3
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:65 - Atomic QA: get identifier for 1 chunks
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 1 QA pairs
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:115 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:127 - Atomic QA: generate optional answers
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 1 QA对
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:135 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:65 - Atomic QA: get identifier for 1 chunks
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 1 QA pairs
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:115 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 17:25:50 | INFO     | datalight.pipeline.atomic:atomic.py:run:127 - Atomic QA: generate optional answers
+2026-06-11 17:26:43 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理, generator=taxonomy, question_num=5
+2026-06-11 17:26:43 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmpmcwtzutg/out, generator=atomic, question_num=3
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:65 - Atomic QA: get identifier for 1 chunks
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 1 QA pairs
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:115 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:127 - Atomic QA: generate optional answers
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 1 QA对
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:135 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:65 - Atomic QA: get identifier for 1 chunks
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 1 QA pairs
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:115 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 17:31:04 | INFO     | datalight.pipeline.atomic:atomic.py:run:127 - Atomic QA: generate optional answers
+2026-06-11 17:31:53 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理, generator=taxonomy, question_num=5
+2026-06-11 17:31:53 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 17:33:02 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:95 - chunk[0] tags: 流程执行类/流程与步骤, 运行推理类/情景处置, 规则约束类/阈值与边界, 规则约束类/职责与权限
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.agentic:agentic.py:run:55 - Depth QA round 1/1: rows=1
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/var/folders/l3/4k38c9c964q2hf7hhnfgb_3r0000gn/T/tmpm8uzbgmq/out, generator=atomic, question_num=3
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:65 - Atomic QA: get identifier for 1 chunks
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 1 QA pairs
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:115 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:127 - Atomic QA: generate optional answers
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 1 QA对
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:135 - Atomic 模式跳过四维评估: 1 QA对
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=1, generated=1, filtered=1, export=1
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:65 - Atomic QA: get identifier for 1 chunks
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 1 candidate tasks
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 1 QA pairs
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:115 - Atomic QA: golden doc verification for 1 rows
+2026-06-11 17:38:36 | INFO     | datalight.pipeline.atomic:atomic.py:run:127 - Atomic QA: generate optional answers
+2026-06-11 17:38:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:124 - 生成QA对完成: 4 QA对
+2026-06-11 17:50:13 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:162 - 扩写完成: 4 QA对
+2026-06-11 17:53:21 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:173 - 补充think完成: 4 QA对
+2026-06-11 17:53:21 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:181 - 单跳 QA 完成: chunks=1, generated=4, filtered=4, export=4
+2026-06-11 18:13:28 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理/taxonomy, generator=taxonomy, question_num=5
+2026-06-11 18:13:28 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-11 18:15:02 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:95 - chunk[0] tags: 运行推理类/情景处置, 规则约束类/规则要求, 流程执行类/流程与步骤, 规则约束类/阈值与边界, 规则约束类/职责与权限, 规则约束类/条件与适用判定, 规则约束类/阈值与边界, 运行推理类/情景处置, 规则约束类/阈值与边界, 流程执行类/流程与步骤

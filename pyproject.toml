@@ -38,9 +38,6 @@ Github = "https://github.com/OpenDCAI/DataFlow"
 Documentation = "https://opendcai.github.io/DataFlow-Doc/"
 "Bug Reports" = "https://github.com/OpenDCAI/DataFlow/issues"
 
-[project.scripts]
-datalight = "datalight.service:run"
-
 [tool.setuptools]
 include-package-data = true
 

@@ -7,6 +7,21 @@ from typing import Any
 Record = dict[str, Any]
 
 
+def limit_rows_per_chunk(rows: list[Record], *, max_per_chunk: int) -> list[Record]:
+    if max_per_chunk <= 0:
+        raise ValueError("max_per_chunk must be positive")
+
+    grouped: dict[tuple[str, int], list[Record]] = {}
+    for row in rows:
+        key = (str(row.get("source_md", "")), int(row.get("chunk_index", 0)))
+        grouped.setdefault(key, []).append(row)
+    limited: list[Record] = []
+    for items in grouped.values():
+        limited.extend(items[:max_per_chunk])
+        
+    return limited
+
+
 class Operator(ABC):
     """Minimal DataFlow-style operator: records in, records out."""
 
