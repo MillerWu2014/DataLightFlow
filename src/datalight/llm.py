@@ -39,7 +39,7 @@ class OpenAICompatibleLLMClient:
         base_url: str = "http://127.0.0.1:1234/v1",
         model: str = "gemma-4-31b-it",
         timeout_sec: int = 120,
-        temperature: float = 0.2,
+        temperature: float = 0.5,
         transport: Transport | None = None,
     ):
         self.base_url = base_url.rstrip("/")
@@ -49,6 +49,17 @@ class OpenAICompatibleLLMClient:
         self._transport = transport or _post_json
 
     def generate(self, prompts: list[str], *, system_prompt: str = "") -> list[str]:
+        """Generate one response per prompt. prompt format:
+        {
+            "model": "...",
+            "messages": [
+                {"role": "system", "content": "<system_prompt>"},
+                {"role": "user", "content": "<prompts[i]>"}
+            ],
+            "temperature": 0.2,
+            "stream": false
+        }
+        """
         return [self._generate_one(prompt, system_prompt=system_prompt) for prompt in prompts]
 
     def _generate_one(self, prompt: str, *, system_prompt: str) -> str:
