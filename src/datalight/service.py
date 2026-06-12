@@ -463,7 +463,7 @@ def pipeline_add_think(
 def pipeline_depth_qa(
     *,
     input_path: Path,
-    output_path: Path,
+    output_path: Optional[Path] = None,
     config: Optional[Path] = None,
     responses_file: Optional[Path] = None,
     lmstudio: bool = False,
@@ -473,6 +473,7 @@ def pipeline_depth_qa(
 ):
     """Run AgenticRAG depth QA generation on existing single-hop QA records."""
     _ensure_file(input_path, "input_path")
+    resolved_output_path = output_path or (input_path.parent / "qa_depth.jsonl")
     app_cfg = _load_config(config)
     llm_client = _build_qa_llm_client(
         responses_file=responses_file,
@@ -483,7 +484,7 @@ def pipeline_depth_qa(
     )
     return run_depth_qa_pipeline(
         input_path=input_path,
-        output_path=output_path,
+        output_path=resolved_output_path,
         llm_client=llm_client,
         n_rounds=n_rounds,
     )
@@ -492,7 +493,7 @@ def pipeline_depth_qa(
 def pipeline_width_qa(
     *,
     input_path: Path,
-    output_path: Path,
+    output_path: Optional[Path] = None,
     config: Optional[Path] = None,
     responses_file: Optional[Path] = None,
     lmstudio: bool = False,
@@ -501,6 +502,7 @@ def pipeline_width_qa(
 ):
     """Run AgenticRAG width QA generation on existing single-hop QA records."""
     _ensure_file(input_path, "input_path")
+    resolved_output_path = output_path or (input_path.parent / "qa_width.jsonl")
     app_cfg = _load_config(config)
     llm_client = _build_qa_llm_client(
         responses_file=responses_file,
@@ -511,7 +513,7 @@ def pipeline_width_qa(
     )
     return run_width_qa_pipeline(
         input_path=input_path,
-        output_path=output_path,
+        output_path=resolved_output_path,
         llm_client=llm_client,
     )
 

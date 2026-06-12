@@ -269,3 +269,10 @@
 2026-06-12 10:39:07 | INFO     | datalight.pipeline.atomic:atomic.py:run:115 - Atomic QA: golden doc verification for 1 rows
 2026-06-12 10:39:07 | INFO     | datalight.pipeline.atomic:atomic.py:run:127 - Atomic QA: generate optional answers
 2026-06-12 10:39:07 | WARNING  | datalight.llm:llm.py:safe_generate:109 - LLM request timed out after 1s: test
+2026-06-12 10:47:06 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理/atomic, generator=atomic, question_num=5
+2026-06-12 10:47:06 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 4 chunks
+2026-06-12 10:47:06 | INFO     | datalight.pipeline.atomic:atomic.py:run:65 - Atomic QA: get identifier for 4 chunks
+2026-06-12 10:48:43 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-12 10:54:03 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request timed out after 180s: http://192.168.101.232:1234/v1/chat/completions
+2026-06-12 10:55:18 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 27 candidate tasks
+2026-06-12 11:04:24 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 27 QA pairs
