@@ -276,3 +276,5 @@
 2026-06-12 10:54:03 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request timed out after 180s: http://192.168.101.232:1234/v1/chat/completions
 2026-06-12 10:55:18 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 27 candidate tasks
 2026-06-12 11:04:24 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 27 QA pairs
+2026-06-12 11:24:34 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: test: Connection reset by peer
+2026-06-12 11:24:34 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request timed out after 1s: test

@@ -95,14 +95,14 @@ def safe_generate(
     *,
     system_prompt: str = "",
 ) -> list[str]:
-    """Call LLM per prompt; log and return empty string on timeout so callers can continue."""
+    """Call LLM per prompt; log and return empty string on transport failure."""
     if not prompts:
         return []
     results: list[str] = []
     for prompt in prompts:
         try:
             results.append(llm_client.generate([prompt], system_prompt=system_prompt)[0])
-        except LLMRequestTimeoutError as exc:
+        except (LLMRequestTimeoutError, ConnectionError) as exc:
             logger.warning("%s", exc)
             results.append("")
     return results
@@ -119,6 +119,11 @@ def _post_json(url: str, payload: dict[str, Any], timeout: int) -> dict[str, Any
     try:
         with request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
             raw = resp.read().decode("utf-8")
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise ConnectionError(
+            f"LLM request HTTP {exc.code}: {url}: {body[:500]}"
+        ) from exc
     except (TimeoutError, error.URLError) as exc:
         
         def _is_timeout_error(exc: BaseException) -> bool:
@@ -134,4 +139,6 @@ def _post_json(url: str, payload: dict[str, Any], timeout: int) -> dict[str, Any
         if isinstance(exc, error.URLError):
             raise ConnectionError(f"LLM request failed: {url}: {exc.reason}") from exc
         raise
+    except OSError as exc:
+        raise ConnectionError(f"LLM request failed: {url}: {exc}") from exc
     return json.loads(raw)
