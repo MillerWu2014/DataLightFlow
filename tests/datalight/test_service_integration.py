@@ -12,7 +12,7 @@ from datalight.service import DatalightService
 
 
 MARKDOWN_PATH = Path(
-    "/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/data/markdown/标准规范/客舱运行管理/客舱运行管理.md",
+    "/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/data/markdown/标准规范/飞机地面勤务/飞机地面勤务.md",
 )
 CONFIG_PATH = Path(
     "/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/configs/datalight.yaml",
@@ -69,13 +69,13 @@ def run_singlehop(service: DatalightService, base_dir: Path, *, generator: str) 
 
 
 def run_multihop(service: DatalightService, base_dir: Path) -> None:
-    output_dir = base_dir / "multihop"
+    output_dir = base_dir / "multihop" / f"{MARKDOWN_PATH.stem}"
     output_dir.mkdir(parents=True, exist_ok=True)
     result = service.pipeline_markdown_multihop_qa(
         markdown=[MARKDOWN_PATH],
         output_dir=output_dir,
-        chunk_words=512,
-        overlap_words=128,
+        chunk_words=640,
+        overlap_words=64,
     )
     expanded_path = output_dir / "qa_multihop_expanded.jsonl"
     expanded = service.pipeline_expand_qa(
@@ -106,8 +106,8 @@ def main() -> None:
     print(f"config={CONFIG_PATH}")
     print(f"output_root={base_dir}")
     print("params: chunk_words=640 overlap_words=128")
-    run_singlehop(service, base_dir, generator="atomic")
-    # run_multihop(service, base_dir)
+    # run_singlehop(service, base_dir, generator="taxonomy")
+    run_multihop(service, base_dir)
     print("\nDone. Please manually review generated jsonl files.")
 
 

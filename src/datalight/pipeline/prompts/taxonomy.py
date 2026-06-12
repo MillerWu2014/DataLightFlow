@@ -23,7 +23,7 @@ class TaxonomyTagPromptTemplate:
         topic = resolve_taxonomy_topic(taxonomy)
         return textwrap.dedent(
             f"""\
-            你是{topic}业务专家。请阅读 Context，并深度理解，识别其中可用于生成高质量 SFT 问答对的知识点，并打上 taxonomy 标签。
+            你是**{topic}**业务专家。请阅读 Context 内容，并深度理解，识别其中可用于生成高质量 SFT 问答对的知识点，并打上 taxonomy 标签。
 
             {language_line}
 
@@ -94,7 +94,7 @@ class TaxonomyQuestionPromptTemplate:
         topic = resolve_taxonomy_topic(taxonomy)
         return textwrap.dedent(
             f"""\
-            你是{topic}业务专家。请依据标签与 Context 生成一个高质量、可独立理解的问题。
+            你是**{topic}**业务专家。请依据标签与 Context 生成一个高质量、可独立理解的问题。
 
             {language_line}
 
@@ -110,7 +110,7 @@ class TaxonomyQuestionPromptTemplate:
             - **自解释性（Self-Explanatory）**：问题须写清必要主体、对象与场景，使读者脱离 Context 后仍能理解在问什么；严禁使用“该项目”“上述内容”“上文提到的”“该规范”“该标准”等模糊代词。
             - **原子性**：一个问题只考察一个核心知识点，避免复合问法；优先聚焦术语定义、单一流程、异常处理、单一指标、单一定义或单一规则。
             - **禁止引用**：问题中不得出现“根据XX规范”“依据XX文件”“如上图所示”“根据表2”“见本章第X节”等对文档其他部分的指代。
-            - **写作规范**：问题直接询问知识内容，禁止以“请根据本段内容”“结合上文”等引用式开头。
+            - **写作规范**：问题直接询问知识内容，禁止以“根据XX文件”、“依据XX规定”、“按照本咨询通告”、“依据上下文”、”根据XXXX节/章/章节“等引用句式开头。
 
             ## 标签信息
             - 主题：{level1_name} / {level2_name}
@@ -146,7 +146,7 @@ class TaxonomyAnswerPromptTemplate:
         topic = resolve_taxonomy_topic(taxonomy)
         return textwrap.dedent(
             f"""\
-            你是{topic}业务专家。请严格依据 Context 回答下方问题，生成高质量、可独立理解的答案。
+            你是**{topic}**业务专家。请严格依据 Context 回答下方问题，生成高质量、可独立理解的答案。
 
             {language_line}
 
@@ -159,10 +159,9 @@ class TaxonomyAnswerPromptTemplate:
             - **多样性**：答案应匹配任务类型，可覆盖事实陈述、逻辑推理、规则适用、流程说明及异常处理等；不要围绕图片、附图、表格编号生成无法独立阅读的内容。
             - **格式规范**：只返回 JSON 对象 `{{"answer":"..."}}`；`answer` 字段存放答案正文，相当于 SFT 样本中的 `output`，勿输出 instruction、input 等额外字段。
             - **完备性**：覆盖问题所涉核心知识点，不遗漏关键参数（数值、阈值、时限）、流程中间步骤、例外条款与特殊情形；Context 信息不足时返回空答案。
-            - **自解释性（Self-Explanatory）**：答案须写清必要主体与对象，使读者脱离 Context 后仍能理解；严禁使用“该项目”“上述内容”“上文提到的”等模糊代词。
-            - **原子性**：一个答案只阐述一个核心知识点，避免把多个流程、规则或指标揉进同一段落。
-            - **禁止引用**：答案中不得出现“如上图所示”“根据表2”“根据附图2-1”“见本章第X节”等对文档其他部分的指代；问题中已有的规范名称可保留，但答案不得新增“根据XX规范”“依据XX文件”式引用。
-            - **写作规范**：答案直接陈述知识内容，禁止以“根据XX文件”“依据XX规定”“按照本咨询通告”等引用句式开头。
+            - **自解释性（Self-Explanatory）**：**答案须写清必要主体与对象，使读者脱离 Context 后仍能理解；严禁使用“该项目”“上述内容”“上下文”等模糊代词**。
+            - **禁止引用**：答案中不得出现“如上图所示”“根据表2”“根据附图2-1”“见本章第X节”等对文档其他部分的指代；问题中已有的规范名称可保留，但答案不得新增**“根据XX规范”**、**“依据XX文件”**式引用。
+            - **写作规范**：答案直接陈述知识内容，禁止以“根据XX文件”、“依据XX规定”、“按照本咨询通告”、“依据上下文”、”根据XXXX节/章/章节“等引用句式开头。
 
             ## 标签信息
             - level1_name: {level1_name}

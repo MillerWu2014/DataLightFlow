@@ -278,3 +278,27 @@
 2026-06-12 11:04:24 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 27 QA pairs
 2026-06-12 11:24:34 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: test: Connection reset by peer
 2026-06-12 11:24:34 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request timed out after 1s: test
+2026-06-12 11:26:49 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['客舱运行管理.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/客舱运行管理/atomic, generator=atomic, question_num=5
+2026-06-12 11:26:49 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 4 chunks
+2026-06-12 11:26:49 | INFO     | datalight.pipeline.atomic:atomic.py:run:65 - Atomic QA: get identifier for 4 chunks
+2026-06-12 11:28:39 | INFO     | datalight.pipeline.atomic:atomic.py:run:73 - Atomic QA: extract conclusions
+2026-06-12 11:35:52 | INFO     | datalight.pipeline.atomic:atomic.py:run:92 - Atomic QA: generate questions from 36 candidate tasks
+2026-06-12 11:48:55 | INFO     | datalight.pipeline.atomic:atomic.py:run:102 - Atomic QA: clean 36 QA pairs
+2026-06-12 12:20:18 | INFO     | datalight.pipeline.atomic:atomic.py:run:115 - Atomic QA: golden doc verification for 19 rows
+2026-06-12 12:32:13 | INFO     | datalight.pipeline.atomic:atomic.py:run:127 - Atomic QA: generate optional answers
+2026-06-12 12:42:33 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request timed out after 180s: http://192.168.101.232:1234/v1/chat/completions
+2026-06-12 12:42:33 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 15 QA对
+2026-06-12 12:42:33 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:134 - Atomic 模式跳过四维评估: 15 QA对
+2026-06-12 12:51:35 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:161 - 扩写完成: 15 QA对
+2026-06-12 13:00:42 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:172 - 补充think完成: 15 QA对
+2026-06-12 13:00:42 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=4, generated=15, filtered=15, export=15
+2026-06-12 13:50:20 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['飞机地面勤务.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/飞机地面勤务/taxonomy, generator=taxonomy, question_num=5
+2026-06-12 13:50:20 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-12 13:51:22 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:94 - chunk[0] tags: 规则约束类/职责与权限, 流程执行类/流程与步骤, 规则约束类/阈值与边界, 规则约束类/职责与权限, 流程执行类/流程与步骤, 规则约束类/条件与适用判定
+2026-06-12 13:59:08 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 5 QA对
+2026-06-12 14:13:11 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:161 - 扩写完成: 5 QA对
+2026-06-12 14:16:37 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:172 - 补充think完成: 5 QA对
+2026-06-12 14:16:37 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=5, filtered=5, export=5
+2026-06-12 14:34:17 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_multihop_qa_pipeline:210 - 多跳 QA 开始: files=['飞机地面勤务.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/飞机地面勤务
+2026-06-12 14:34:17 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_multihop_qa_pipeline:226 - 语义切块完成: 15 chunks (max_chunk_chars=2560, overlap ignored)
+2026-06-12 17:05:47 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_multihop_qa_pipeline:250 - 多跳 QA 完成: chunks=15, contexts=192, generated=55

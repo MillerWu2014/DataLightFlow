@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any
+from tqdm import tqdm
 
 from datalight.llm import LLMClient, safe_generate
 from datalight.pipeline.core import Operator, Record
@@ -44,7 +45,11 @@ class MultiHopQAGeneratorOperator(Operator):
         )
 
         grouped: dict[tuple[str, int], list[Record]] = {}
-        for row, response in zip(rows, responses):
+        for row, response in tqdm(
+            zip(rows, responses),
+            total=len(rows),
+            desc="Parsing multihop QA",
+        ):
             qa_pairs = extract_multihop_qa_pairs(response, strict=self.strict_validation)
             if not qa_pairs:
                 continue
