@@ -5,7 +5,7 @@ from typing import Any
 from tqdm import tqdm
 
 from datalight.config import TaxonomyCategory, TaxonomySettings
-from datalight.llm import LLMClient
+from datalight.llm import LLMClient, safe_generate
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.language import language_instruction, normalize_target_language
 from datalight.pipeline.prompts.taxonomy import (
@@ -66,7 +66,8 @@ class ChunkTaxonomyTaggerOperator(Operator):
             self._build_tag_prompt(str(row.get("chunk_text", "")))
             for row in rows
         ]
-        responses = self.llm_client.generate(
+        responses = safe_generate(
+            self.llm_client,
             prompts,
             system_prompt=_taxonomy_system_prompt(self.system_prompt, TAG_JSON_SUFFIX),
         )
@@ -136,7 +137,8 @@ class TaxonomyQuestionGeneratorOperator(Operator):
             self._build_question_prompt(str(row.get("chunk_text", "")), tag)
             for row, tag in jobs
         ]
-        responses = self.llm_client.generate(
+        responses = safe_generate(
+            self.llm_client,
             prompts,
             system_prompt=_taxonomy_system_prompt(self.system_prompt, QUESTION_JSON_SUFFIX),
         )
@@ -197,7 +199,8 @@ class TaxonomyAnswerGeneratorOperator(Operator):
             )
             for row in rows
         ]
-        responses = self.llm_client.generate(
+        responses = safe_generate(
+            self.llm_client,
             prompts,
             system_prompt=_taxonomy_system_prompt(self.system_prompt, ANSWER_JSON_SUFFIX),
         )

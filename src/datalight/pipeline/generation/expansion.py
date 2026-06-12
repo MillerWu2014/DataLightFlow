@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from tqdm import tqdm
 
-from datalight.llm import LLMClient
+from datalight.llm import LLMClient, safe_generate
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.language import language_instruction, normalize_target_language
 from datalight.pipeline.models import QAExpansionPipelineResult
@@ -38,7 +38,8 @@ class QAExpansionOperator(Operator):
             build_expansion_prompt(row, mode=self.mode, target_language=self.target_language)
             for row in rows
         ]
-        responses = self.llm_client.generate(
+        responses = safe_generate(
+            self.llm_client,
             prompts,
             system_prompt=build_expansion_system_prompt(
                 target_language=self.target_language,

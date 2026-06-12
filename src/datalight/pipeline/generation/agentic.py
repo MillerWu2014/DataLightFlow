@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from datalight.llm import LLMClient
+from datalight.llm import LLMClient, safe_generate
 from datalight.log import get_logger
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.models import AgenticQAPipelineResult
@@ -183,7 +183,7 @@ def _ensure_identifiers(
         return rows
 
     prompts = [prompt.build_prompt(str(row["question"])) for row in missing]
-    responses = llm_client.generate(prompts, system_prompt=prompt.build_system_prompt())
+    responses = safe_generate(llm_client, prompts, system_prompt=prompt.build_system_prompt())
     response_map = {id(row): response for row, response in zip(missing, responses)}
 
     out: list[Record] = []
@@ -205,7 +205,7 @@ def _depth_backward_step(
     backward_prompt: DepthBackwardTaskPrompt,
 ) -> list[Record]:
     prompts = [backward_prompt.build_prompt(str(row[identifier_key])) for row in rows]
-    responses = llm_client.generate(prompts, system_prompt="")
+    responses = safe_generate(llm_client, prompts, system_prompt="")
     out: list[Record] = []
     for row, response in zip(rows, responses):
         parsed = parse_backward_result(response)
@@ -236,7 +236,7 @@ def _depth_superset_check_step(
         )
         for row in rows
     ]
-    responses = llm_client.generate(prompts, system_prompt=superset_prompt.build_system_prompt())
+    responses = safe_generate(llm_client, prompts, system_prompt=superset_prompt.build_system_prompt())
     out: list[Record] = []
     for row, response in zip(rows, responses):
         parsed = parse_json_dict(response)
@@ -265,7 +265,7 @@ def _depth_question_step(
         )
         for row in rows
     ]
-    responses = llm_client.generate(prompts, system_prompt=question_prompt.build_system_prompt())
+    responses = safe_generate(llm_client, prompts, system_prompt=question_prompt.build_system_prompt())
     out: list[Record] = []
     for row, response in zip(rows, responses):
         parsed = parse_json_dict(response)
@@ -288,12 +288,13 @@ def _depth_verify_step(
     recall_prompt: DepthRecallScorePrompt,
 ) -> list[Record]:
     prompts = [answer_prompt.build_prompt(str(row[question_key])) for row in rows]
-    llm_answers = llm_client.generate(prompts, system_prompt="")
+    llm_answers = safe_generate(llm_client, prompts, system_prompt="")
     recall_prompts = [
         recall_prompt.build_prompt(_golden_answer_text(row), llm_answer)
         for row, llm_answer in zip(rows, llm_answers)
     ]
-    recall_responses = llm_client.generate(
+    recall_responses = safe_generate(
+        llm_client,
         recall_prompts,
         system_prompt=recall_prompt.build_system_prompt(),
     )
@@ -320,7 +321,7 @@ def _width_merge_step(
         merge_prompt.build_prompt([input_batch[index], input_batch[index + 1]])
         for index in range(len(input_batch) - 1)
     ]
-    responses = llm_client.generate(pair_prompts, system_prompt=merge_prompt.build_system_prompt())
+    responses = safe_generate(llm_client, pair_prompts, system_prompt=merge_prompt.build_system_prompt())
     merged_rows: list[Record] = []
     for merge_index, response in enumerate(responses):
         parsed = parse_json_value(response)
@@ -366,7 +367,7 @@ def _width_origin_check_step(
         )
         for row in rows
     ]
-    responses = llm_client.generate(prompts, system_prompt=origin_prompt.build_system_prompt())
+    responses = safe_generate(llm_client, prompts, system_prompt=origin_prompt.build_system_prompt())
     out: list[Record] = []
     for row, response in zip(rows, responses):
         parsed = parse_json_value(response)
@@ -401,7 +402,7 @@ def _width_verify_step(
         )
         for row in rows
     ]
-    responses = llm_client.generate(prompts, system_prompt=verify_prompt.build_system_prompt())
+    responses = safe_generate(llm_client, prompts, system_prompt=verify_prompt.build_system_prompt())
     out: list[Record] = []
     for row, response in zip(rows, responses):
         parsed = parse_json_value(response)
@@ -422,7 +423,8 @@ def _width_verify_step(
         recall_prompt.build_prompt(_golden_answer_text(row), str(row["llm_answer"]))
         for row in out
     ]
-    recall_responses = llm_client.generate(
+    recall_responses = safe_generate(
+        llm_client,
         recall_prompts,
         system_prompt=recall_prompt.build_system_prompt(),
     )

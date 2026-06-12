@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from tqdm import tqdm
 
-from datalight.llm import LLMClient
+from datalight.llm import LLMClient, safe_generate
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.language import language_instruction, normalize_target_language
 from datalight.pipeline.models import QAThinkingPipelineResult
@@ -29,7 +29,8 @@ class QAThinkOperator(Operator):
 
     def run(self, rows: list[Record]) -> list[Record]:
         prompts = [build_think_prompt(row, target_language=self.target_language) for row in rows]
-        responses = self.llm_client.generate(
+        responses = safe_generate(
+            self.llm_client,
             prompts,
             system_prompt=build_think_system_prompt(
                 target_language=self.target_language,

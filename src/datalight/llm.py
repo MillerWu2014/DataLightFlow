@@ -3,7 +3,12 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from typing import Any, Callable, Protocol
-from urllib import request
+from urllib import error, request
+from datalight.log import logger
+
+
+class LLMRequestTimeoutError(TimeoutError):
+    """Raised when an LLM HTTP request exceeds the configured timeout."""
 
 
 class LLMClient(Protocol):
@@ -84,6 +89,25 @@ class OpenAICompatibleLLMClient:
             raise ValueError(f"Invalid OpenAI-compatible response: {data!r}") from exc
 
 
+def safe_generate(
+    llm_client: LLMClient,
+    prompts: list[str],
+    *,
+    system_prompt: str = "",
+) -> list[str]:
+    """Call LLM per prompt; log and return empty string on timeout so callers can continue."""
+    if not prompts:
+        return []
+    results: list[str] = []
+    for prompt in prompts:
+        try:
+            results.append(llm_client.generate([prompt], system_prompt=system_prompt)[0])
+        except LLMRequestTimeoutError as exc:
+            logger.warning("%s", exc)
+            results.append("")
+    return results
+
+
 def _post_json(url: str, payload: dict[str, Any], timeout: int) -> dict[str, Any]:
     body = json.dumps(payload).encode("utf-8")
     req = request.Request(
@@ -92,6 +116,22 @@ def _post_json(url: str, payload: dict[str, Any], timeout: int) -> dict[str, Any
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
-        raw = resp.read().decode("utf-8")
+    try:
+        with request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+            raw = resp.read().decode("utf-8")
+    except (TimeoutError, error.URLError) as exc:
+        
+        def _is_timeout_error(exc: BaseException) -> bool:
+            if isinstance(exc, TimeoutError):
+                return True
+            reason = getattr(exc, "reason", None)
+            return isinstance(reason, TimeoutError)
+
+        if _is_timeout_error(exc):
+            raise LLMRequestTimeoutError(
+                f"LLM request timed out after {timeout}s: {url}"
+            ) from exc
+        if isinstance(exc, error.URLError):
+            raise ConnectionError(f"LLM request failed: {url}: {exc.reason}") from exc
+        raise
     return json.loads(raw)

@@ -4,7 +4,7 @@ import re
 
 from tqdm import tqdm
 
-from datalight.llm import LLMClient
+from datalight.llm import LLMClient, safe_generate
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.language import language_instruction, normalize_target_language
 
@@ -26,7 +26,11 @@ class Text2QAEvaluatorOperator(Operator):
         for row in tqdm(rows, desc="Evaluating QA pairs"):
             item = dict(row)
             for name, builder in dimensions:
-                response = self.llm_client.generate([builder(row)], system_prompt=self.system_prompt)[0]
+                response = safe_generate(
+                    self.llm_client,
+                    [builder(row)],
+                    system_prompt=self.system_prompt,
+                )[0]
                 grade, feedback = parse_grade_and_feedback(response)
                 item[f"{name}_grade"] = grade
                 item[f"{name}_feedback"] = feedback

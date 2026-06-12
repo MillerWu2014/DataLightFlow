@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from datalight.llm import LLMClient
+from datalight.llm import LLMClient, safe_generate
 from datalight.pipeline.core import Operator, Record
 from datalight.pipeline.language import normalize_target_language
 from datalight.pipeline.prompts.multihop import MultihopPromptTemplate
@@ -34,7 +34,8 @@ class MultiHopQAGeneratorOperator(Operator):
             return []
 
         prompts = [self.prompt_template.build_prompt(str(row["context"])) for row in rows]
-        responses = self.llm_client.generate(
+        responses = safe_generate(
+            self.llm_client,
             prompts,
             system_prompt=build_multihop_system_prompt(
                 prompt_template=self.prompt_template,

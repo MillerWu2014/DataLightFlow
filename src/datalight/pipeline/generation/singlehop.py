@@ -5,7 +5,7 @@ import re
 
 from tqdm import tqdm
 
-from datalight.llm import LLMClient
+from datalight.llm import LLMClient, safe_generate
 from datalight.pipeline.core import Operator, Record, limit_rows_per_chunk
 from datalight.pipeline.language import normalize_target_language
 from datalight.pipeline.prompts.text2qa import Text2QAAutoPromptTemplate, Text2QASeedPromptTemplate
@@ -44,7 +44,7 @@ class Text2QAGeneratorOperator(Operator):
             self._auto_prompt.build_prompt(str(row["chunk_text"]), question_num=self.question_num)
             for row in source_rows
         ]
-        auto_responses = self.llm_client.generate(auto_prompts, system_prompt="")
+        auto_responses = safe_generate(self.llm_client, auto_prompts, system_prompt="")
 
         jobs: list[tuple[Record, str]] = []
         for row, response in zip(source_rows, auto_responses):
@@ -59,7 +59,8 @@ class Text2QAGeneratorOperator(Operator):
             self._seed_prompt.build_prompt(generated_prompt, str(row["chunk_text"]))
             for row, generated_prompt in jobs
         ]
-        qa_responses = self.llm_client.generate(
+        qa_responses = safe_generate(
+            self.llm_client,
             seed_prompts,
             system_prompt=self.system_prompt,
         )

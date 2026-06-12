@@ -105,8 +105,8 @@ def main() -> None:
     print(f"markdown={MARKDOWN_PATH}")
     print(f"config={CONFIG_PATH}")
     print(f"output_root={base_dir}")
-    print("params: chunk_words=2048 overlap_words=128")
-    run_singlehop(service, base_dir, generator="taxonomy")
+    print("params: chunk_words=640 overlap_words=128")
+    run_singlehop(service, base_dir, generator="atomic")
     # run_multihop(service, base_dir)
     print("\nDone. Please manually review generated jsonl files.")
 

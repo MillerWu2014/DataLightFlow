@@ -7,7 +7,7 @@ from collections import Counter
 from typing import Any
 from tqdm import tqdm
 
-from datalight.llm import LLMClient
+from datalight.llm import LLMClient, safe_generate
 from datalight.log import get_logger
 from datalight.pipeline.core import Operator, Record, limit_rows_per_chunk
 from datalight.pipeline.prompts.atomic import (
@@ -150,9 +150,9 @@ def _batch_generate(
     if not prompts:
         return []
     if desc is None:
-        return llm_client.generate(prompts, system_prompt=system_prompt)
+        return safe_generate(llm_client, prompts, system_prompt=system_prompt)
     return [
-        llm_client.generate([prompt], system_prompt=system_prompt)[0]
+        safe_generate(llm_client, [prompt], system_prompt=system_prompt)[0]
         for prompt in tqdm(prompts, desc=desc)
     ]
 
