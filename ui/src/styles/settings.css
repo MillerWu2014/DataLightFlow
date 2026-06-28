@@ -1,0 +1,376 @@
+/* Settings page — stitch_v1 datalight_settings */
+
+.settings-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: #faf9fe;
+  color: #1a1b1f;
+}
+
+.settings-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Top bar — full width, matches stitch settings header */
+.st-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+  padding: 0 24px;
+  background: #faf9fe;
+  border-bottom: 1px solid #c1c6d7;
+  flex-shrink: 0;
+  z-index: 50;
+}
+
+.st-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.st-title {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  color: #1a1b1f;
+}
+
+.st-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 100%;
+}
+
+.st-nav-link {
+  font-size: 14px;
+  line-height: 20px;
+  color: #414755;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.1s, background 0.1s;
+  border-radius: 8px 8px 0 0;
+}
+
+.st-nav-link:hover {
+  color: #1a1b1f;
+  background: #f4f3f8;
+}
+
+.st-nav-link.active {
+  color: #0058bc;
+  border-bottom-color: #0058bc;
+  font-weight: 500;
+}
+
+.st-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.st-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.st-search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 18px;
+  color: #717786;
+  pointer-events: none;
+}
+
+.st-search input {
+  width: 256px;
+  padding: 6px 16px 6px 40px;
+  border: none;
+  border-radius: 9999px;
+  background: #f4f3f8;
+  font-size: 14px;
+  line-height: 20px;
+  outline: none;
+  transition: width 0.15s, box-shadow 0.15s;
+}
+
+.st-search input:focus {
+  width: 320px;
+  box-shadow: 0 0 0 2px #0070eb;
+}
+
+.st-search input::placeholder {
+  color: rgba(65, 71, 85, 0.5);
+}
+
+.st-icon-btn {
+  background: transparent;
+  border: none;
+  color: #414755;
+  padding: 6px;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.st-icon-btn:hover {
+  background: #f4f3f8;
+}
+
+.st-topbar-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px solid #c1c6d7;
+}
+
+.st-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #0058bc;
+  color: #ffffff;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.st-export-btn:hover {
+  opacity: 0.9;
+}
+
+.st-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #c1c6d7;
+  background: #d8e2ff;
+  color: #004493;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Sidebar footer */
+.settings-sidebar-footer {
+  margin-top: auto;
+  padding: 24px;
+  border-top: 1px solid #c1c6d7;
+}
+
+.settings-sidebar-footer .wb-footer-item {
+  margin: 0;
+}
+
+.settings-nav-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.settings-nav-item.active .settings-nav-icon {
+  color: #0058bc;
+}
+
+.settings-nav-item:not(.active) .settings-nav-icon {
+  color: inherit;
+}
+
+.settings-nav-item:not(.active):hover .settings-nav-icon {
+  color: #0058bc;
+}
+
+/* Form controls — stitch glass panel inputs */
+.settings-select-wrap {
+  position: relative;
+}
+
+.settings-select-wrap .settings-select {
+  width: 100%;
+  appearance: none;
+  background: #f4f3f8;
+  border: 1px solid #c1c6d7;
+  border-radius: 8px;
+  padding: 10px 40px 10px 16px;
+  font-size: 14px;
+  outline: none;
+  transition: box-shadow 0.15s;
+}
+
+.settings-select-wrap .settings-select:focus {
+  box-shadow: 0 0 0 2px #0070eb;
+}
+
+.settings-select-arrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #717786;
+  pointer-events: none;
+  font-size: 20px;
+}
+
+.settings-input {
+  width: 100%;
+  background: #f4f3f8;
+  border: 1px solid #c1c6d7;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: box-shadow 0.15s;
+}
+
+.settings-input:focus {
+  box-shadow: 0 0 0 2px #0070eb;
+}
+
+.settings-browse-btn {
+  padding: 10px 16px;
+  background: #eeedf3;
+  border: 1px solid #c1c6d7;
+  border-radius: 8px;
+  color: #414755;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+
+.settings-browse-btn:hover {
+  background: #e3e2e7;
+}
+
+.settings-save-btn {
+  padding: 12px 32px;
+  background: #0058bc;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 112, 235, 0.2);
+  transition: background 0.15s;
+}
+
+.settings-save-btn:hover {
+  background: #0070eb;
+}
+
+.settings-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.settings-reset-btn {
+  padding: 12px 32px;
+  background: transparent;
+  border: 1px solid #c1c6d7;
+  border-radius: 8px;
+  color: #414755;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.settings-reset-btn:hover {
+  background: #e3e2e7;
+}
+
+.settings-section-hidden {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .st-search {
+    display: none;
+  }
+  .st-nav {
+    gap: 12px;
+  }
+  .st-topbar-left {
+    gap: 16px;
+  }
+}
+
+/* Taxonomy preview table — stitch grid-cols-[auto,1fr] + divide-x */
+.taxonomy-table {
+  background: #f4f3f8;
+  border: 1px solid #c1c6d7;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.04);
+}
+
+.taxonomy-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+
+.taxonomy-cell {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 20px;
+  padding: 12px 16px;
+  border-top: 1px solid #c1c6d7;
+}
+
+.taxonomy-cell:nth-child(odd) {
+  border-right: 1px solid #c1c6d7;
+}
+
+.taxonomy-cell-header {
+  background: #eeedf3;
+  border-top: none;
+  padding: 8px 16px;
+  font-size: 10px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  color: #414755;
+  font-weight: 500;
+}
+
+.taxonomy-cell-lvl {
+  text-align: center;
+  color: #414755;
+  min-width: 48px;
+  white-space: nowrap;
+}
+
+.taxonomy-cell-header.taxonomy-cell-lvl {
+  text-align: center;
+}
+
+.taxonomy-cell-node {
+  color: #1a1b1f;
+}
+
+.taxonomy-node-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.taxonomy-branch {
+  color: #717786;
+  flex-shrink: 0;
+}
