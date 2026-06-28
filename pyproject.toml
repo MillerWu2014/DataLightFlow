@@ -43,7 +43,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = [".", "src"]
-include = ["datalight", "datalight.*"]
+include = ["datalight", "datalight.*", "server", "server.*"]
 
 
 [tool.setuptools.dynamic]
@@ -94,4 +94,5 @@ rag = ["lightrag-hku", "asyncio"]
 pdf2vqa=["mineru[vlm]>=2.5.0,<2.7.0"]
 
 flash-mineru = ["flash-mineru"]
-ray = ["rayorch"] 
+ray = ["rayorch"]
+server = ["gunicorn>=22.0"]

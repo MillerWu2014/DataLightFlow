@@ -215,7 +215,15 @@ export function WorkspacePage() {
           showToast(`已生成 ${records.length} 条 QA`);
         } else if (status.status === "failed") {
           clearInterval(interval);
+          const msg = typeof status.error === "string" ? status.error : "任务失败";
+          const newTasks = loadTasks().map((t) =>
+            t.jobId === jobId
+              ? { ...t, status: "failed" as const, errorMessage: msg, finishedAt: new Date().toISOString() }
+              : t,
+          );
+          persist(newTasks, sessions);
           setGenerating(false);
+          showToast(msg, "error");
         }
       } catch (e) {
         clearInterval(interval);

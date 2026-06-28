@@ -302,3 +302,17 @@
 2026-06-12 14:34:17 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_multihop_qa_pipeline:210 - 多跳 QA 开始: files=['飞机地面勤务.md'], output=/Users/miller/Workspace/BJBN/project/aviation-llm-finetuning/thirdparty/DataLightFlow/outputs/singlehop/飞机地面勤务
 2026-06-12 14:34:17 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_multihop_qa_pipeline:226 - 语义切块完成: 15 chunks (max_chunk_chars=2560, overlap ignored)
 2026-06-12 17:05:47 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_multihop_qa_pipeline:250 - 多跳 QA 完成: chunks=15, contexts=192, generated=55
+2026-06-28 09:49:45 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-0/test_create_job_accept_nested_0/data/jobs/6c781758-37f4-423f-82e4-5c6b963682f7/output/default, generator=default, question_num=1
+2026-06-28 09:49:45 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 09:50:10 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-1/test_create_job_accept_nested_0/data/jobs/38c55c96-8edd-4076-9ff2-4d923edc3b4a/output/default, generator=default, question_num=1
+2026-06-28 09:50:10 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-2/test_create_job_accept_nested_0/data/jobs/9965d7b8-cad2-437d-8a44-d39836742ae9/output/default, generator=default, question_num=1
+2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 09:54:15 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-2/test_delete_job0/data/jobs/a20f44bc-4b24-4214-9831-b781ac735c50/output/default, generator=default, question_num=1
+2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 09:54:15 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0

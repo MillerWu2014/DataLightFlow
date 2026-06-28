@@ -451,13 +451,13 @@ ui/
 
 ## 对接 checklist
 
-1. 实现 [BACKEND_API.md](./BACKEND_API.md) 中 P0 端点，CORS 允许 `http://localhost:5173`
-2. `ui/vite.config.ts` 配置 `/api` 代理（或前端与 API 同域部署）
+1. ~~实现 [BACKEND_API.md](./BACKEND_API.md) 中 P0 端点~~ → 见 [`src/server/`](../src/server/)
+2. ~~`ui/vite.config.ts` 配置 `/api` 代理~~（已默认指向 `8000`）
 3. `src/lib/api.ts`：`USE_MOCK = false`
-4. 调整 `createQaJob` 请求体，去掉 `uploadContent` / `fileName`（若后端不需要）
+4. ~~`createQaJob` 请求体已与后端对齐~~
 5. `WorkspacePage`：可选在 mount 时调用 `listJobs()` 替代仅读 `localStorage`
-6. 统一 Job 失败错误格式为前端可展示的 `errorMessage` 字符串
-7. `GET /api/v1/config` 返回完整 `taxonomy.nodes` 供设置页预览
+6. ~~Job 失败错误格式~~（`getJobStatus` 已解析 `error.message`）
+7. ~~`GET /api/v1/config` 返回 `taxonomy.nodes`~~
 
 ---
 
@@ -478,6 +478,7 @@ ui/
 | 文档 | 说明 |
 |------|------|
 | [BACKEND_API.md](./BACKEND_API.md) | 后端 API 完整规格、Job Runner 伪代码、产物路径 |
+| [src/server/README.md](../src/server/README.md) | FastAPI 服务启动与 gunicorn 配置 |
 | [docs/前端设计需求说明.md](../docs/前端设计需求说明.md) | 产品需求与交互说明 |
 | [docs/技术实现方案.md](../docs/技术实现方案.md) | 流水线与 Service 能力 |
 | `src/datalight/service.py` | Python 侧 `DatalightService` 入口 |
