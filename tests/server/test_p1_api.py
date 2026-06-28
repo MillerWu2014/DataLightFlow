@@ -7,6 +7,7 @@ from datalight.llm import StaticLLMClient
 from fastapi.testclient import TestClient
 
 from server.app import create_app
+from server.schemas import PipelineParamsBody
 from server.settings import ServerSettings
 
 
@@ -66,7 +67,17 @@ def client(tmp_path: Path) -> TestClient:
     )
     app = create_app(settings)
     store = app.state.store
-    store.save_session("sess-1", _sample_session())
+    upload_id, _, _ = store.save_upload("demo.md", b"# doc\n")
+    job = store.create_job(
+        upload_id=upload_id,
+        source_file_name="demo.md",
+        pipeline="singlehop",
+        generator="default",
+        params=PipelineParamsBody(),
+    )
+    session = _sample_session()
+    session["jobId"] = job.job_id
+    store.save_session("sess-1", session)
     return TestClient(app)
 
 

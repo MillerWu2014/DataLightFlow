@@ -136,12 +136,7 @@ def fetch_job_qa(
 
     session = store.get_session(job.session_id) if job.session_id else None
     if session and session.get("items"):
-        records = [
-            item["record"]
-            for item in session["items"]
-            if not item.get("local", {}).get("deleted")
-        ]
-        return records[offset : offset + limit]
+        return store.list_qa_records(job.session_id, limit=limit, offset=offset)
 
     from server.job_runner import resolve_qa_jsonl_path
 

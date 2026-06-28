@@ -32,6 +32,8 @@ gunicorn server.main:app \
 | `DATALIGHT_MAX_UPLOAD_MB` | 上传大小上限（MB） | `32` |
 | `DATALIGHT_CORS_ORIGINS` | 逗号分隔 CORS 源 | `http://localhost:5173,…` |
 
+SQLite 库文件：`{DATALIGHT_SERVER_DATA}/datalight.db`。表结构与迁移见 [docs/SQLite数据库设计.md](../../docs/SQLite数据库设计.md)。
+
 ## 已实现端点（P0）
 
 - `POST /api/v1/uploads`

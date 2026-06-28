@@ -316,3 +316,44 @@
 2026-06-28 09:54:15 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
 2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
 2026-06-28 09:54:15 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 10:10:24 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-3/test_create_job_accept_nested_0/data/jobs/6f2c5cf2-54e0-4016-8233-2b51b4c9c819/output/default, generator=default, question_num=1
+2026-06-28 10:10:24 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 10:10:24 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 10:10:24 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 10:10:24 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 10:10:34 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-4/test_create_job_accept_nested_0/data/jobs/5c9216a4-a2eb-4d0f-a46a-fa25eb1552e1/output/default, generator=default, question_num=1
+2026-06-28 10:10:34 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 10:10:34 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 10:10:34 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 10:10:34 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 10:10:35 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-4/test_delete_job0/data/jobs/32f38d75-8e41-47ba-a75d-32ada473e8ed/output/default, generator=default, question_num=1
+2026-06-28 10:10:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-5/test_create_job_accept_nested_0/data/jobs/51829e85-527c-44e1-9546-630c356c2ce3/output/default, generator=default, question_num=1
+2026-06-28 10:10:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 10:10:58 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 10:10:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 10:10:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 10:10:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-5/test_delete_job0/data/jobs/04d54a4f-e615-4dd4-a175-9d4a2cfe060f/output/default, generator=default, question_num=1
+2026-06-28 10:10:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 10:10:58 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 10:10:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 10:10:58 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 10:11:19 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-6/test_create_job_accept_nested_0/data/jobs/55d017a8-f570-467b-bb7f-628ebc6dbeec/output/default, generator=default, question_num=1
+2026-06-28 10:11:19 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 10:11:19 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 10:11:19 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 10:11:19 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 10:11:19 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-6/test_delete_job0/data/jobs/4cb0d977-316d-4890-a7c2-1d995c82a911/output/default, generator=default, question_num=1
+2026-06-28 10:11:19 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 10:11:19 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 10:11:19 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 10:11:19 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 10:11:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-7/test_create_job_accept_nested_0/data/jobs/8434a2ed-0299-4f26-8971-55820c035b04/output/default, generator=default, question_num=1
+2026-06-28 10:11:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 10:11:36 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 10:11:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 10:11:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0
+2026-06-28 10:11:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:61 - 单跳 QA 开始: files=['doc.md'], output=/private/var/folders/sk/7hvddg255c35lnnjcmfsshd80000gn/T/pytest-of-miller/pytest-7/test_delete_job0/data/jobs/cf786fc5-c92c-4779-9e86-446f8dff1025/output/default, generator=default, question_num=1
+2026-06-28 10:11:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:76 - 切块完成: 1 chunks
+2026-06-28 10:11:36 | WARNING  | datalight:llm.py:safe_generate:106 - LLM request failed: http://127.0.0.1:1234/v1/chat/completions: [Errno 61] Connection refused
+2026-06-28 10:11:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:123 - 生成QA对完成: 0 QA对
+2026-06-28 10:11:36 | INFO     | datalight.pipeline.runner:runner.py:run_markdown_qa_pipeline:180 - 单跳 QA 完成: chunks=1, generated=0, filtered=0, export=0

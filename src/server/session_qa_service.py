@@ -32,7 +32,7 @@ class SessionQaService:
         record_patch: dict[str, Any] | None,
         local_patch: dict[str, Any] | None,
     ) -> dict[str, Any]:
-        session, item = self._require_item(session_id, qa_id)
+        item = self._require_item(session_id, qa_id)
         if record_patch:
             merged = {**(item.get("record") or {}), **record_patch}
             merged["user_modified"] = True
@@ -40,16 +40,16 @@ class SessionQaService:
         if local_patch:
             item["local"] = {**(item.get("local") or {}), **local_patch}
         item["local"]["dirty"] = True
-        self.store.save_session(session_id, session)
+        self.store.save_session_item(session_id, item)
         return item
 
     def delete_item(self, session_id: str, qa_id: str) -> None:
-        session, item = self._require_item(session_id, qa_id)
+        item = self._require_item(session_id, qa_id)
         local = item.get("local") or {}
         local["deleted"] = True
         local["dirty"] = True
         item["local"] = local
-        self.store.save_session(session_id, session)
+        self.store.save_session_item(session_id, item)
 
     def expand_item(
         self,
@@ -60,9 +60,10 @@ class SessionQaService:
         llm_model: str | None = None,
         timeout_sec: int | None = None,
     ) -> dict[str, Any]:
-        session, item = self._require_item(session_id, qa_id, allow_deleted=False)
+        item = self._require_item(session_id, qa_id, allow_deleted=False)
         record = dict(item.get("record") or {})
-        params = PipelineParamsBody.model_validate(session.get("params") or {})
+        session = self.store.get_session(session_id)
+        params = PipelineParamsBody.model_validate((session or {}).get("params") or {})
         language = params.language
 
         try:
@@ -78,12 +79,11 @@ class SessionQaService:
         if not expanded_rows:
             raise SessionQaError("扩写未返回结果。", status_code=500)
 
-        updated_record = expanded_rows[0]
-        item["record"] = updated_record
+        item["record"] = expanded_rows[0]
         local = item.get("local") or {}
         local["dirty"] = True
         item["local"] = local
-        self.store.save_session(session_id, session)
+        self.store.save_session_item(session_id, item)
         return item
 
     def evaluate_item(
@@ -94,11 +94,12 @@ class SessionQaService:
         llm_model: str | None = None,
         timeout_sec: int | None = None,
     ) -> dict[str, Any]:
-        session, item = self._require_item(session_id, qa_id, allow_deleted=False)
+        item = self._require_item(session_id, qa_id, allow_deleted=False)
         record = dict(item.get("record") or {})
         if not record.get("chunk_text") and record.get("context"):
             record["chunk_text"] = record["context"]
-        params = PipelineParamsBody.model_validate(session.get("params") or {})
+        session = self.store.get_session(session_id)
+        params = PipelineParamsBody.model_validate((session or {}).get("params") or {})
         language = params.language
 
         try:
@@ -113,13 +114,12 @@ class SessionQaService:
         if not scored_rows:
             raise SessionQaError("重评未返回结果。", status_code=500)
 
-        updated_record = scored_rows[0]
-        item["record"] = updated_record
+        item["record"] = scored_rows[0]
         local = item.get("local") or {}
         local["dirty"] = True
-        local["filterPassed"] = passes_filter(updated_record, params.min_score)
+        local["filterPassed"] = passes_filter(scored_rows[0], params.min_score)
         item["local"] = local
-        self.store.save_session(session_id, session)
+        self.store.save_session_item(session_id, item)
         return item
 
     def _require_item(
@@ -128,16 +128,13 @@ class SessionQaService:
         qa_id: str,
         *,
         allow_deleted: bool = True,
-    ) -> tuple[dict[str, Any], dict[str, Any]]:
-        session = self.store.get_session(session_id)
-        if session is None:
-            raise SessionQaError("会话不存在。", status_code=404)
-        for item in session.get("items", []):
-            if item.get("id") == qa_id:
-                if not allow_deleted and (item.get("local") or {}).get("deleted"):
-                    raise SessionQaError("该 QA 已删除，无法操作。", status_code=409)
-                return session, item
-        raise SessionQaError("QA 记录不存在。", status_code=404)
+    ) -> dict[str, Any]:
+        item = self.store.get_session_item(session_id, qa_id)
+        if item is None:
+            raise SessionQaError("QA 记录不存在。", status_code=404)
+        if not allow_deleted and (item.get("local") or {}).get("deleted"):
+            raise SessionQaError("该 QA 已删除，无法操作。", status_code=409)
+        return item
 
     def _build_llm_client(self, *, llm_model: str | None, timeout_sec: int | None):
         app_cfg = DatalightConfig.from_file(self.config_path)

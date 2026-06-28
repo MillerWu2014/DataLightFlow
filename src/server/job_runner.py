@@ -10,7 +10,8 @@ from datalight.service import DatalightService
 from datalight.utils.jsonl import read_jsonl
 
 from server.schemas import PipelineParamsBody
-from server.storage import DataStore, JobRecord, _utc_now
+from server.storage import DataStore, JobRecord
+from server.util import utc_now
 
 
 def humanize_error(exc: Exception) -> str:
@@ -46,7 +47,7 @@ def resolve_qa_jsonl_path(job: JobRecord, output_dir: Path) -> Path:
 
 def build_session_payload(job: JobRecord, records: list[dict[str, Any]], params: PipelineParamsBody) -> dict[str, Any]:
     session_id = str(uuid.uuid4())
-    now = _utc_now()
+    now = utc_now()
     items = []
     for index, record in enumerate(records):
         items.append(
@@ -100,10 +101,12 @@ class JobRunner:
 
         try:
             self.store.update_job(job_id, status="running", stage="切块")
+            self.store.log_job_event(job_id, "切块")
             result_paths: dict[str, str] = {}
 
             if job.pipeline == "multihop":
                 self.store.update_job(job_id, stage="上下文构建")
+                self.store.log_job_event(job_id, "上下文构建")
                 result = service.pipeline_markdown_multihop_qa(
                     markdown=[markdown_path],
                     output_dir=output_dir,
@@ -124,6 +127,7 @@ class JobRunner:
             else:
                 generator = job.generator or "default"
                 self.store.update_job(job_id, stage="生成")
+                self.store.log_job_event(job_id, "生成")
                 result = service.pipeline_markdown_qa(
                     markdown=[markdown_path],
                     output_dir=output_dir,
@@ -157,6 +161,7 @@ class JobRunner:
 
                 if params.add_depth_qa:
                     self.store.update_job(job_id, stage="深挖")
+                    self.store.log_job_event(job_id, "深挖")
                     depth_input = gen_dir / "qa_generated.jsonl"
                     service.pipeline_depth_qa(
                         input_path=depth_input,
@@ -170,6 +175,7 @@ class JobRunner:
 
                 if params.add_width_qa:
                     self.store.update_job(job_id, stage="扩宽")
+                    self.store.log_job_event(job_id, "扩宽")
                     width_input = gen_dir / "qa_generated.jsonl"
                     service.pipeline_width_qa(
                         input_path=width_input,
@@ -181,6 +187,7 @@ class JobRunner:
                     result_paths["width"] = str(gen_dir / "qa_width.jsonl")
 
             self.store.update_job(job_id, stage="导出")
+            self.store.log_job_event(job_id, "导出")
             records = read_jsonl(qa_path) if qa_path.is_file() else []
             session_payload = build_session_payload(job, records, params)
             self.store.save_session(session_payload["id"], session_payload)
@@ -191,7 +198,7 @@ class JobRunner:
                 stage="导出",
                 session_id=session_payload["id"],
                 qa_count=len(records),
-                finished_at=_utc_now(),
+                finished_at=utc_now(),
                 error_message=None,
                 result_paths=result_paths,
             )
@@ -200,6 +207,6 @@ class JobRunner:
             self.store.update_job(
                 job_id,
                 status="failed",
-                finished_at=_utc_now(),
+                finished_at=utc_now(),
                 error_message=humanize_error(exc),
             )
